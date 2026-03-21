@@ -53,13 +53,22 @@ public class RepairOrderServiceImpl extends ServiceImpl<RepairOrderMapper, Repai
     }
 
     @Override
+    public List<RepairOrder> getRepairOrderByStatus(Integer status)
+    {
+        return lambdaQuery()
+                .eq(RepairOrder::getStatus, status)
+                .orderByDesc(RepairOrder::getCreateTime)
+                .list();
+    }
+
+    @Override
     public RepairOrder getRepairOrderInfo(Integer id)
     {
         return getById(id);
     }
 
     @Override
-    public void updateRepairOrder(Integer repairOrderId, String problem)
+    public void modifyRepairOrder(Integer repairOrderId, String problem)
     {
         // 判空
         if (repairOrderId == null || problem == null)
@@ -74,7 +83,7 @@ public class RepairOrderServiceImpl extends ServiceImpl<RepairOrderMapper, Repai
     }
 
     @Override
-    public void modifyRepairOrder(Integer repairOrderId, Integer status, Integer staffId)
+    public void updateRepairOrder(Integer repairOrderId, Integer status, Integer staffId)
     {
         // 判空
         if (repairOrderId == null || status == null || staffId == null)

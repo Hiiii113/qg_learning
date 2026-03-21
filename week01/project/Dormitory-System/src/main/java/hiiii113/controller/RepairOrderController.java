@@ -43,6 +43,14 @@ public class RepairOrderController
         return Result.success("查询成功！", res, 200);
     }
 
+    // 查看特定状态的报修单
+    @GetMapping("/status/{status}")
+    public Result<List<RepairOrder>> getRepairOrderByStatus(@PathVariable int status)
+    {
+        List<RepairOrder> res = repairOrderService.getRepairOrderByStatus(status);
+        return Result.success("查询成功！", res, 200);
+    }
+
     // 查看单个报修单
     @GetMapping("/{repairOrderId}")
     public Result<RepairOrder> getRepairOrderInfo(@PathVariable int repairOrderId)
@@ -53,18 +61,18 @@ public class RepairOrderController
 
     // 修改单个报修单
     @PutMapping("/{repairOrderId}")
-    public Result<Void> updateRepairOrder(@PathVariable int repairOrderId, @RequestBody UpdateRepairOrderDto dto)
+    public Result<Void> modifyRepairOrder(@PathVariable int repairOrderId, @RequestBody UpdateRepairOrderDto dto)
     {
-        repairOrderService.updateRepairOrder(repairOrderId, dto.getProblem());
+        repairOrderService.modifyRepairOrder(repairOrderId, dto.getProblem());
 
         return Result.success("更新成功！", 200);
     }
 
     // 更新单个报修单状态
     @PatchMapping("/{repairOrderId}")
-    public Result<Void> modifyRepairOrder(@PathVariable int repairOrderId, @RequestBody ModifyRepairOrderDto dto)
+    public Result<Void> updateRepairOrder(@PathVariable int repairOrderId, @RequestBody ModifyRepairOrderDto dto)
     {
-        repairOrderService.modifyRepairOrder(repairOrderId, dto.getStatus(), dto.getStaffId());
+        repairOrderService.updateRepairOrder(repairOrderId, dto.getStatus(), dto.getStaffId());
 
         return Result.success("修改成功！", 200);
     }

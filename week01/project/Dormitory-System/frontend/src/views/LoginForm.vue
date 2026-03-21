@@ -2,23 +2,14 @@
     <div class="login-container">
         <div class="login-box">
             <h2>登录</h2>
+            <div v-if="msg" class="msg" :class="msgType">{{ msg }}</div>
             <!-- 登录表单 -->
             <form @submit.prevent="handleLogin">
                 <div class="form-item">
-                    <input
-                        v-model="form.userNumber"
-                        type="text"
-                        placeholder="学号/工号"
-                        required
-                    />
+                    <input v-model="form.userNumber" type="text" placeholder="学号/工号" required />
                 </div>
                 <div class="form-item">
-                    <input
-                        v-model="form.password"
-                        type="password"
-                        placeholder="密码"
-                        required
-                    />
+                    <input v-model="form.password" type="password" placeholder="密码" required />
                 </div>
                 <button type="submit" class="btn-primary">登录</button>
             </form>
@@ -31,17 +22,29 @@
 </template>
 
 <script setup>
-import {ref} from 'vue'
-import {useRouter} from 'vue-router'
-import {post} from "@/utils/request.js";
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { post } from '@/utils/request.js'
 
 const router = useRouter()
 
 // 绑定用户输入
 const form = ref({
     userNumber: '',
-    password: ''
+    password: '',
 })
+
+const msg = ref('')
+const msgType = ref('success')
+
+const showMsg = (text, type = 'success') => {
+    msg.value = text
+    msgType.value = type
+    // 三秒后清除
+    setTimeout(() => {
+        msg.value = ''
+    }, 3000)
+}
 
 const handleLogin = async () => {
     if (!form.value.userNumber || !form.value.password) {
@@ -52,27 +55,28 @@ const handleLogin = async () => {
     // 封装返回对象
     const loginData = {
         userNumber: form.value.userNumber,
-        password: form.value.password
+        password: form.value.password,
     }
 
     post('/users/login', loginData)
-        .then(res => {
-            localStorage.setItem('userInfo', JSON.stringify(res.data))
+        .then((res) => {
             if (res.code === 200) {
-                alert('登录成功！正在跳转...')
-                if (res.data.role === 1) {
-                    router.push('/student')
-                } else {
-                    router.push('/admin')
-                }
+                showMsg('登录成功！正在跳转...', 'success')
+                localStorage.setItem('userInfo', JSON.stringify(res.data))
+                setTimeout(() => {
+                    if (res.data.role === 1) {
+                        router.push('/student')
+                    } else {
+                        router.push('/admin')
+                    }
+                }, 3000)
             } else {
-                alert('登录失败！' + res.msg || '请稍候重试')
+                showMsg('登录失败！' + res.msg || '请稍候重试', 'error')
                 console.log(res)
             }
-
         })
-        .catch(err => {
-            alert('登录失败！' + err.msg || err.message || '请稍后重试')
+        .catch((err) => {
+            showMsg('登录失败！' + err.msg || err.message || '请稍后重试', 'error')
             console.log(err)
         })
 }
@@ -147,5 +151,24 @@ input:focus {
 
 .switch-text a:hover {
     text-decoration: underline;
+}
+
+.msg {
+    padding: 10px 14px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+    font-size: 14px;
+}
+
+.msg.success {
+    background: #f0f9eb;
+    color: #67c23a;
+    border: 1px solid #c2e7b0;
+}
+
+.msg.error {
+    background: #fef0f0;
+    color: #f56c6c;
+    border: 1px solid #fbc4c4;
 }
 </style>

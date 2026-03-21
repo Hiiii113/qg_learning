@@ -10,6 +10,8 @@ import hiiii113.service.UserService;
 import hiiii113.util.PasswordUtil;
 import org.springframework.stereotype.Service;
 
+import java.util.regex.Pattern;
+
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService
 {
@@ -27,7 +29,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         User user = getOne(new LambdaQueryWrapper<User>().eq(User::getUserNumber, userNumber));
         if (user == null)
         {
-            throw new ServiceException("用户名或密码错误！", 401);
+            throw new ServiceException("该账号未注册！", 401);
         }
 
         // 用 BCrypt 比对密码
@@ -48,14 +50,40 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 判空
         if (userNumber == null || password == null || role == null)
         {
-            throw new ServiceException("用户码和密码和身份不能为空！", 400);
+            throw new ServiceException("学号/工号和密码和身份不能为空！", 400);
         }
 
         // 先查看一下有没有重复用户名
         User user = getOne(new LambdaQueryWrapper<User>().eq(User::getUserNumber, userNumber));
         if (user != null)
         {
-            throw new ServiceException("用户名已存在！", 409);
+            throw new ServiceException("学号/工号已存在！", 409);
+        }
+
+        // 是否超过长度
+        if (userNumber.length() > 20)
+        {
+            throw new ServiceException("学号/工号不能超过20位！", 400);
+        }
+
+        // 正则校验
+        if (role == 1) // 学生: 前缀3125或3225
+        {
+            if (!Pattern.matches("^(3125|3225).*", userNumber))
+            {
+                throw new ServiceException("学号必须以3125或者3225开头！", 400);
+            }
+        }
+        else if (role == 2) // 管理员：前缀0025
+        {
+            if (!Pattern.matches("^0025.*", userNumber))
+            {
+                throw new ServiceException("工号必须以0025开头！", 400);
+            }
+        }
+        else
+        {
+            throw new ServiceException("身份选择有误！", 400);
         }
 
         // 没有的话就直接调用save方法

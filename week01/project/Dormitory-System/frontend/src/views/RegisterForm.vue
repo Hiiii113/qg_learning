@@ -2,15 +2,11 @@
     <div class="register-container">
         <div class="register-box">
             <h2>注册</h2>
+            <div v-if="msg" class="msg" :class="msgType">{{ msg }}</div>
             <!-- 注册表单 -->
             <form @submit.prevent="handleRegister">
                 <div class="form-item">
-                    <input
-                        v-model="form.userNumber"
-                        type="text"
-                        placeholder="学号/工号"
-                        required
-                    />
+                    <input v-model="form.userNumber" type="text" placeholder="学号/工号" required />
                 </div>
                 <div class="form-item">
                     <select v-model="form.role" class="role-select">
@@ -20,12 +16,7 @@
                     </select>
                 </div>
                 <div class="form-item">
-                    <input
-                        v-model="form.password"
-                        type="password"
-                        placeholder="密码"
-                        required
-                    />
+                    <input v-model="form.password" type="password" placeholder="密码" required />
                 </div>
                 <div class="form-item">
                     <input
@@ -46,9 +37,9 @@
 </template>
 
 <script setup>
-import {ref} from 'vue'
-import {useRouter} from 'vue-router'
-import {post} from '../utils/request.js'
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { post } from '../utils/request.js'
 
 const router = useRouter()
 
@@ -57,8 +48,20 @@ const form = ref({
     userNumber: '',
     password: '',
     confirmPassword: '',
-    role: 0
+    role: 0,
 })
+
+const msg = ref('')
+const msgType = ref('success')
+
+const showMsg = (text, type = 'success') => {
+    msg.value = text
+    msgType.value = type
+    // 三秒后清除
+    setTimeout(() => {
+        msg.value = ''
+    }, 3000)
+}
 
 // 处理注册操作
 const handleRegister = async () => {
@@ -84,16 +87,18 @@ const handleRegister = async () => {
     }
 
     post('/users', registerData)
-        .then(res => {
+        .then((res) => {
             if (res.code === 201) {
-                alert('注册成功！正在跳转...')
-                router.push('/login')
+                showMsg('注册成功！正在跳转...')
+                setTimeout(() => {
+                    router.push('/login')
+                }, 3000)
             } else {
-                alert('注册失败！' + res.msg || '请稍后再试')
+                showMsg('注册失败！' + res.msg || '请稍后再试', 'error')
             }
         })
-        .catch(err => {
-            alert('注册失败！' + err.msg || err.message || '请稍后再试')
+        .catch((err) => {
+            showMsg('注册失败！' + err.msg || err.message || '请稍后再试', 'error')
             console.log(err)
         })
 }
@@ -184,5 +189,24 @@ input:focus {
 
 .switch-text a:hover {
     text-decoration: underline;
+}
+
+.msg {
+    padding: 10px 14px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+    font-size: 14px;
+}
+
+.msg.success {
+    background: #f0f9eb;
+    color: #67c23a;
+    border: 1px solid #c2e7b0;
+}
+
+.msg.error {
+    background: #fef0f0;
+    color: #f56c6c;
+    border: 1px solid #fbc4c4;
 }
 </style>

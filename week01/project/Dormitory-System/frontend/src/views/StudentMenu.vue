@@ -5,20 +5,29 @@
 
             <!-- 导航按钮 -->
             <div class="nav-bar">
-                <button :class="{active: currentView === 'bind'}" @click="currentView = 'bind'">
+                <button :class="{ active: currentView === 'bind' }" @click="currentView = 'bind'">
                     绑定宿舍
                 </button>
-                <button :class="{active: currentView === 'create'}" @click="currentView = 'create'">
+                <button
+                    :class="{ active: currentView === 'create' }"
+                    @click="currentView = 'create'"
+                >
                     创建报修单
                 </button>
-                <button :class="{active: currentView === 'repairs'}" @click="loadMyRepairs">
+                <button :class="{ active: currentView === 'repairs' }" @click="loadMyRepairs">
                     我的报修单
                 </button>
-                <button :class="{active: currentView === 'cancel'}" @click="currentView = 'cancel'">
+                <button
+                    :class="{ active: currentView === 'cancel' }"
+                    @click="currentView = 'cancel'"
+                >
                     取消报修单
                 </button>
-                <button :class="{active: currentView === 'password'}"
-                        @click="currentView = 'password'">修改密码
+                <button
+                    :class="{ active: currentView === 'password' }"
+                    @click="currentView = 'password'"
+                >
+                    修改密码
                 </button>
             </div>
 
@@ -29,7 +38,7 @@
             <div v-if="currentView === 'bind'">
                 <div class="form-item">
                     <label>宿舍号</label>
-                    <input v-model="dormRoom" placeholder="例如：西1-001"/>
+                    <input v-model="dormRoom" placeholder="例如：西1-001" />
                 </div>
                 <div class="actions">
                     <button class="btn-primary" @click="handleBindDormitory">保存</button>
@@ -41,8 +50,11 @@
             <div v-if="currentView === 'create'">
                 <div class="form-item">
                     <label>问题描述</label>
-                    <textarea v-model="repairProblem" placeholder="请描述清楚：位置/现象/是否紧急"
-                              rows="5"></textarea>
+                    <textarea
+                        v-model="repairProblem"
+                        placeholder="请描述清楚：位置/现象/是否紧急"
+                        rows="5"
+                    ></textarea>
                 </div>
                 <div class="actions">
                     <button class="btn-primary" @click="handleCreateRepair">提交报修</button>
@@ -56,20 +68,20 @@
                 <div v-if="myRepairs.length === 0" class="empty">暂无报修记录</div>
                 <table v-else class="table">
                     <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>问题</th>
-                        <th>状态</th>
-                        <th>创建时间</th>
-                    </tr>
+                        <tr>
+                            <th>ID</th>
+                            <th>问题</th>
+                            <th>状态</th>
+                            <th>创建时间</th>
+                        </tr>
                     </thead>
                     <tbody>
-                    <tr v-for="item in myRepairs" :key="item.id">
-                        <td>{{ item.id }}</td>
-                        <td>{{ item.problem }}</td>
-                        <td>{{ statusMap[item.status] }}</td>
-                        <td>{{ item.createTime }}</td>
-                    </tr>
+                        <tr v-for="item in myRepairs" :key="item.id">
+                            <td>{{ item.id }}</td>
+                            <td>{{ item.problem }}</td>
+                            <td>{{ statusMap[item.status] }}</td>
+                            <td>{{ item.createTime }}</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -78,7 +90,7 @@
             <div v-if="currentView === 'cancel'">
                 <div class="form-item">
                     <label>报修单 ID</label>
-                    <input v-model="cancelId" type="number" placeholder="请输入报修单ID"/>
+                    <input v-model="cancelId" type="number" placeholder="请输入报修单ID" />
                 </div>
                 <div class="actions">
                     <button class="btn-danger" @click="handleCancelRepair">确认取消</button>
@@ -90,7 +102,7 @@
             <div v-if="currentView === 'password'">
                 <div class="form-item">
                     <label>新密码</label>
-                    <input v-model="newPassword" type="password" placeholder="请输入新密码"/>
+                    <input v-model="newPassword" type="password" placeholder="请输入新密码" />
                 </div>
                 <div class="actions">
                     <button class="btn-primary" @click="handleChangePassword">保存</button>
@@ -108,9 +120,9 @@
 </template>
 
 <script setup>
-import {ref} from 'vue'
-import {useRouter} from 'vue-router'
-import {get, post, put} from '@/utils/request.js'
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { get, post, put } from '@/utils/request.js'
 
 const router = useRouter()
 
@@ -134,7 +146,7 @@ const showMsg = (text, type = 'success') => {
 }
 
 // 状态映射
-const statusMap = {1: '待处理', 2: '处理中', 3: '已完成', 4: '已取消'}
+const statusMap = { 1: '待处理', 2: '处理中', 3: '已完成', 4: '已取消' }
 
 // 数据
 const dormRoom = ref('')
@@ -145,7 +157,11 @@ const newPassword = ref('')
 
 // 绑定宿舍
 const handleBindDormitory = () => {
-    const data = {dormRoom: dormRoom.value}
+    if (dormRoom.value === '') {
+        showMsg('宿舍地址不能为空！', 'error')
+        return
+    }
+    const data = { dormRoom: dormRoom.value }
     post(`/users/${userInfo.value.id}/dormitories`, data)
         .then(() => {
             showMsg('绑定成功！')
@@ -158,7 +174,11 @@ const handleBindDormitory = () => {
 
 // 创建报修单
 const handleCreateRepair = () => {
-    const data = {userId: userInfo.value.id, problem: repairProblem.value}
+    if (repairProblem.value === '') {
+        showMsg('问题描述不能为空！', 'error')
+        return
+    }
+    const data = { userId: userInfo.value.id, problem: repairProblem.value }
     post('/repair-orders', data)
         .then(() => {
             showMsg('提交成功！')
@@ -172,7 +192,7 @@ const handleCreateRepair = () => {
 const loadMyRepairs = () => {
     currentView.value = 'repairs'
     get(`/repair-orders/user/${userInfo.value.id}`)
-        .then(res => {
+        .then((res) => {
             myRepairs.value = res.data || []
         })
         .catch(() => showMsg('查询失败！', 'error'))
@@ -191,7 +211,11 @@ const handleCancelRepair = () => {
 
 // 修改密码
 const handleChangePassword = () => {
-    const data = {password: newPassword.value}
+    if (newPassword.value === '') {
+        showMsg('新密码不能为空！', 'error')
+        return
+    }
+    const data = { password: newPassword.value }
     put(`/users/${userInfo.value.id}/password`, data)
         .then(() => {
             showMsg('修改成功！')
@@ -209,18 +233,27 @@ const handleLogout = () => {
 // 加载用户数据
 const loadUserInfo = () => {
     get(`/users/${userInfo.value.id}`)
-        .then(res => {
+        .then((res) => {
             localStorage.setItem('userInfo', JSON.stringify(res.data))
             // 将存储的用户信息反序列化
             userInfo.value = res.data
         })
-        .catch(err => console.log(err))
+        .catch((err) => console.log(err))
+}
+
+// 检查是否绑定了宿舍
+const checkDorm = () => {
+    if (!userInfo.value.dormRoom) {
+        showMsg('请先绑定宿舍', 'error')
+        currentView.value = 'bind'
+    }
 }
 
 // 进入页面加载数据
 loadMyRepairs()
 loadUserInfo()
-
+// 检查是否绑定了宿舍
+checkDorm()
 </script>
 
 <style scoped>
@@ -301,7 +334,8 @@ h2 {
     font-weight: 600;
 }
 
-input, textarea {
+input,
+textarea {
     width: 100%;
     padding: 10px 12px;
     border: 1px solid #ddd;
@@ -310,7 +344,8 @@ input, textarea {
     box-sizing: border-box;
 }
 
-input:focus, textarea:focus {
+input:focus,
+textarea:focus {
     outline: none;
     border-color: #409eff;
 }
@@ -388,7 +423,8 @@ textarea {
     border-collapse: collapse;
 }
 
-.table th, .table td {
+.table th,
+.table td {
     padding: 10px 12px;
     border-bottom: 1px solid #eee;
     text-align: left;
@@ -421,7 +457,6 @@ textarea {
     flex-direction: column;
     gap: 10px;
 }
-
 
 .user-info {
     color: #999;

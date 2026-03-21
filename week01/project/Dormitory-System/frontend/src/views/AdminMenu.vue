@@ -5,20 +5,32 @@
 
             <!-- 导航按钮 -->
             <div class="nav-bar">
-                <button :class="{active: currentView === 'list'}" @click="currentView = 'list'">
+                <button :class="{ active: currentView === 'list' }" @click="currentView = 'list'">
                     所有报修单
                 </button>
-                <button :class="{active: currentView === 'detail'}" @click="currentView = 'detail'">
+                <button
+                    :class="{ active: currentView === 'detail' }"
+                    @click="currentView = 'detail'"
+                >
                     查看详情
                 </button>
-                <button :class="{active: currentView === 'update'}" @click="currentView = 'update'">
+                <button
+                    :class="{ active: currentView === 'update' }"
+                    @click="currentView = 'update'"
+                >
                     更新状态
                 </button>
-                <button :class="{active: currentView === 'delete'}" @click="currentView = 'delete'">
+                <button
+                    :class="{ active: currentView === 'delete' }"
+                    @click="currentView = 'delete'"
+                >
                     删除报修单
                 </button>
-                <button :class="{active: currentView === 'password'}"
-                        @click="currentView = 'password'">修改密码
+                <button
+                    :class="{ active: currentView === 'password' }"
+                    @click="currentView = 'password'"
+                >
+                    修改密码
                 </button>
             </div>
 
@@ -27,27 +39,40 @@
 
             <!-- 所有报修单 -->
             <div v-if="currentView === 'list'">
-                <button class="btn-refresh" @click="loadAllRepairs">刷新</button>
+                <div class="list-toolbar">
+                    <button class="btn-refresh" @click="selectRepairByStatus">↻ 刷新</button>
+                    <select
+                        v-model="selectStatus"
+                        @change="selectRepairByStatus"
+                        class="filter-select"
+                    >
+                        <option :value="0">全部状态</option>
+                        <option :value="1">待处理</option>
+                        <option :value="2">处理中</option>
+                        <option :value="3">已完成</option>
+                        <option :value="4">已取消</option>
+                    </select>
+                </div>
                 <div v-if="repairs.length === 0" class="empty">暂无报修单</div>
                 <table v-else class="table">
                     <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>用户ID</th>
-                        <th>问题</th>
-                        <th>状态</th>
-                        <th>创建时间</th>
-                    </tr>
+                        <tr>
+                            <th>ID</th>
+                            <th>用户ID</th>
+                            <th>问题</th>
+                            <th>状态</th>
+                            <th>创建时间</th>
+                        </tr>
                     </thead>
                     <tbody>
-                    <!-- 点击跳转详情页面 -->
-                    <tr v-for="item in repairs" :key="item.id" @click="viewDetail(item.id)">
-                        <td>{{ item.id }}</td>
-                        <td>{{ item.userId }}</td>
-                        <td>{{ item.problem }}</td>
-                        <td>{{ statusMap[item.status] }}</td>
-                        <td>{{ item.createTime }}</td>
-                    </tr>
+                        <!-- 点击跳转详情页面 -->
+                        <tr v-for="item in repairs" :key="item.id" @click="viewDetail(item.id)">
+                            <td>{{ item.id }}</td>
+                            <td>{{ item.userId }}</td>
+                            <td>{{ item.problem }}</td>
+                            <td>{{ statusMap[item.status] }}</td>
+                            <td>{{ item.createTime }}</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -56,11 +81,12 @@
             <div v-if="currentView === 'detail'">
                 <div class="form-item">
                     <label>报修单 ID</label>
-                    <input v-model="detailId" type="number" placeholder="请输入报修单ID"/>
+                    <input v-model="detailId" type="number" placeholder="请输入报修单ID" />
                 </div>
                 <div class="actions">
                     <button class="btn-primary" @click="loadDetail">查询</button>
-                    <button class="btn-ghost" @click="detailId = ''; detailInfo = null">清空
+                    <button class="btn-ghost" @click="((updateId = ''), (updateStatus = 1))">
+                        清空
                     </button>
                 </div>
                 <div v-if="detailInfo" class="detail-card">
@@ -68,7 +94,9 @@
                     <p><strong>用户ID：</strong>{{ detailInfo.userId }}</p>
                     <p><strong>状态：</strong>{{ statusMap[detailInfo.status] }}</p>
                     <p><strong>问题：</strong>{{ detailInfo.problem }}</p>
-                    <p v-if="detailInfo.staffId !== null"><strong>维修员工id ：</strong>{{ detailInfo.staffId }}</p>
+                    <p v-if="detailInfo.staffId !== null">
+                        <strong>维修员工id ：</strong>{{ detailInfo.staffId }}
+                    </p>
                     <p><strong>创建时间：</strong>{{ detailInfo.createTime }}</p>
                     <p><strong>更新时间：</strong>{{ detailInfo.updateTime }}</p>
                 </div>
@@ -78,7 +106,7 @@
             <div v-if="currentView === 'update'">
                 <div class="form-item">
                     <label>报修单 ID</label>
-                    <input v-model="updateId" type="number" placeholder="请输入报修单ID"/>
+                    <input v-model="updateId" type="number" placeholder="请输入报修单ID" />
                 </div>
                 <div class="form-item">
                     <label>目标状态</label>
@@ -90,7 +118,9 @@
                 </div>
                 <div class="actions">
                     <button class="btn-primary" @click="handleUpdateStatus">保存</button>
-                    <button class="btn-ghost" @click="updateId = ''; updateStatus = 1">清空</button>
+                    <button class="btn-ghost" @click="((updateId = ''), (updateStatus = 1))">
+                        清空
+                    </button>
                 </div>
             </div>
 
@@ -98,7 +128,7 @@
             <div v-if="currentView === 'delete'">
                 <div class="form-item">
                     <label>报修单 ID</label>
-                    <input v-model="deleteId" type="number" placeholder="请输入报修单ID"/>
+                    <input v-model="deleteId" type="number" placeholder="请输入报修单ID" />
                 </div>
                 <div class="actions">
                     <button class="btn-danger" @click="handleDelete">确认删除</button>
@@ -110,7 +140,7 @@
             <div v-if="currentView === 'password'">
                 <div class="form-item">
                     <label>新密码</label>
-                    <input v-model="newPassword" type="password" placeholder="请输入新密码"/>
+                    <input v-model="newPassword" type="password" placeholder="请输入新密码" />
                 </div>
                 <div class="actions">
                     <button class="btn-primary" @click="handleChangePassword">保存</button>
@@ -127,9 +157,9 @@
 </template>
 
 <script setup>
-import {ref} from 'vue'
-import {useRouter} from 'vue-router'
-import {del, get, patch, put} from '@/utils/request.js'
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { del, get, patch, put } from '@/utils/request.js'
 
 const router = useRouter()
 // 反序列化JSON字符串
@@ -151,7 +181,7 @@ const showMsg = (text, type = 'success') => {
 }
 
 // 状态映射
-const statusMap = {1: '待处理', 2: '处理中', 3: '已完成', 4: '已取消'}
+const statusMap = { 1: '待处理', 2: '处理中', 3: '已完成', 4: '已取消' }
 
 // 数据
 const repairs = ref([])
@@ -161,21 +191,39 @@ const updateId = ref('')
 const updateStatus = ref(1)
 const deleteId = ref('')
 const newPassword = ref('')
+const selectStatus = ref(0)
 
 // 加载所有报修单
 const loadAllRepairs = () => {
     get('/repair-orders')
-        .then(res => {
+        .then((res) => {
             repairs.value = res.data || []
-            showMsg('查询成功！')
         })
         .catch(() => showMsg('查询失败！', 'error'))
 }
 
+// 根据状态筛选报修单
+const selectRepairByStatus = () => {
+    if (selectStatus.value === 0) {
+        loadAllRepairs()
+        return
+    } else {
+        get(`/repair-orders/status/${selectStatus.value}`)
+            .then((res) => {
+                repairs.value = res.data || []
+            })
+            .catch(() => showMsg('查询失败！', 'error'))
+    }
+}
+
 // 查看详情
 const loadDetail = () => {
+    if (detailId.value === '') {
+        showMsg('id不能为空！', 'error')
+        return
+    }
     get(`/repair-orders/${detailId.value}`)
-        .then(res => {
+        .then((res) => {
             detailInfo.value = res.data
             showMsg('查询成功！')
         })
@@ -191,7 +239,11 @@ const viewDetail = (id) => {
 
 // 更新状态
 const handleUpdateStatus = () => {
-    const data = {status: updateStatus.value, staffId: userInfo.id}
+    if (updateId.value === '') {
+        showMsg('id不能为空！', 'error')
+        return
+    }
+    const data = { status: updateStatus.value, staffId: userInfo.id }
     patch(`/repair-orders/${updateId.value}`, data)
         .then(() => {
             showMsg('更新成功！')
@@ -204,6 +256,10 @@ const handleUpdateStatus = () => {
 
 // 删除
 const handleDelete = () => {
+    if (deleteId.value === '') {
+        showMsg('id不能为空！', 'error')
+        return
+    }
     del(`/repair-orders/${deleteId.value}`)
         .then(() => {
             showMsg('删除成功！')
@@ -215,7 +271,11 @@ const handleDelete = () => {
 
 // 修改密码
 const handleChangePassword = () => {
-    const data = {password: newPassword.value}
+    if (newPassword.value === '') {
+        showMsg('新密码不能为空！', 'error')
+        return
+    }
+    const data = { password: newPassword.value }
     put(`/users/${userInfo.id}/password`, data)
         .then(() => {
             showMsg('修改成功！')
@@ -232,7 +292,6 @@ const handleLogout = () => {
 
 // 进入页面加载数据
 loadAllRepairs()
-
 </script>
 
 <style scoped>
@@ -316,7 +375,8 @@ h2 {
     font-weight: 600;
 }
 
-input, select {
+input,
+select {
     width: 100%;
     padding: 10px 12px;
     border: 1px solid #ddd;
@@ -325,7 +385,8 @@ input, select {
     box-sizing: border-box;
 }
 
-input:focus, select:focus {
+input:focus,
+select:focus {
     outline: none;
     border-color: #409eff;
 }
@@ -395,7 +456,8 @@ input:focus, select:focus {
     border-collapse: collapse;
 }
 
-.table th, .table td {
+.table th,
+.table td {
     padding: 10px 12px;
     border-bottom: 1px solid #eee;
     text-align: left;
@@ -431,7 +493,6 @@ input:focus, select:focus {
     color: #333;
 }
 
-/* 空状态 */
 .empty {
     padding: 30px;
     text-align: center;
@@ -440,7 +501,6 @@ input:focus, select:focus {
     border-radius: 6px;
 }
 
-/* 底部 */
 .footer {
     margin-top: 30px;
     padding-top: 16px;
@@ -467,5 +527,30 @@ input:focus, select:focus {
 
 .btn-logout:hover {
     background: #fef0f0;
+}
+
+.list-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.btn-refresh {
+    padding: 8px 16px;
+    background: #409eff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.filter-select {
+    width: 200px;
+    padding: 8px;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    cursor: pointer;
 }
 </style>

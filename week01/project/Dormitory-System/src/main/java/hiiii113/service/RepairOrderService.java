@@ -16,14 +16,17 @@ public interface RepairOrderService extends IService<RepairOrder>
     // 获取所有的报修单（管理员）
     List<RepairOrder> getAllRepairOrder();
 
+    // 查看特定状态的报修单
+    List<RepairOrder> getRepairOrderByStatus(Integer status);
+
     // 获取报修单详情
     RepairOrder getRepairOrderInfo(Integer id);
 
-    // 更新报修单信息
-    void updateRepairOrder(Integer repairOrderId, String problem);
+    // 修改报修单信息
+    void modifyRepairOrder(Integer repairOrderId, String problem);
 
     // 处理报修单
-    void modifyRepairOrder(Integer repairOrderId, Integer status, Integer staffId);
+    void updateRepairOrder(Integer repairOrderId, Integer status, Integer staffId);
 
     // 删除报修单
     void deleteRepairOrder(Integer repairOrderId);
