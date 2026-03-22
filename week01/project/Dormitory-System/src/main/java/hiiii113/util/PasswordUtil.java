@@ -1,22 +1,18 @@
 package hiiii113.util;
 
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.mindrot.jbcrypt.BCrypt;
 
 public class PasswordUtil
 {
-
-    // 注册静态对象
-    private static final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-
     // 加密
     public static String encode(String rawPassword)
     {
-        return encoder.encode(rawPassword);
+        return BCrypt.hashpw(rawPassword, BCrypt.gensalt());
     }
 
     // 校验
     public static boolean matches(String rawPassword, String encodedPassword)
     {
-        return encoder.matches(rawPassword, encodedPassword);
+        return BCrypt.checkpw(rawPassword, encodedPassword);
     }
 }
