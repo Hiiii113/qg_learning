@@ -10,6 +10,8 @@ const instance = axios.create({
 instance.interceptors.request.use(
     // 成功则返回让axios继续请求
     (config) => {
+        // 添加 satoken
+        config.headers['satoken'] = localStorage.getItem('token')
         return config
     },
     // 失败则抛出异常error

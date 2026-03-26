@@ -3,6 +3,9 @@ package hiiii113.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import hiiii113.entity.User;
 
+/**
+ * user 的 service 层，继承使用 IService
+ */
 public interface UserService extends IService<User>
 {
     // 登录

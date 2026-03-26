@@ -2,6 +2,9 @@ package hiiii113.exception;
 
 import lombok.Getter;
 
+/**
+ * 自定义业务异常，包含状态码，返回时直接提取状态码
+ */
 @Getter
 public class ServiceException extends RuntimeException
 {

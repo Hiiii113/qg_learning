@@ -2,6 +2,9 @@ package hiiii113.dto;
 
 import lombok.Data;
 
+/**
+ * 用户注册
+ */
 @Data
 public class UserRegisterDto
 {

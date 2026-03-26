@@ -24,7 +24,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { post } from '@/utils/request.js'
+import { get, post } from '@/utils/request.js'
 
 const router = useRouter()
 
@@ -59,22 +59,28 @@ const handleLogin = async () => {
     }
 
     post('/users/login', loginData)
-        .then((res) => {
+        .then( async (res) => {
             if (res.code === 200) {
+                localStorage.setItem('token', res.data)
+                // 获取 userInfo 并等待请求完成
+                const userRes = await get('/users/info')
+                // 存在 localStorage 和变量里
+                const userInfo = userRes.data
+                localStorage.setItem('userInfo', JSON.stringify(userInfo))
+                // 提示
                 showMsg('登录成功！正在跳转...', 'success')
-                localStorage.setItem('userInfo', JSON.stringify(res.data))
+                // 跳转
                 setTimeout(() => {
-                    if (res.data.role === 1) {
+                    // 直接用 userInfo 判断角色
+                    if (userInfo.role === 1) {
                         router.push('/student')
-                    } else {
+                    } else if (userInfo.role === 2) {
                         router.push('/admin')
+                    } else {
+                        showMsg('身份异常，请联系管理员！', 'error')
                     }
-                }, 3000)
-            } else {
-                showMsg('登录失败！' + res.msg || '请稍候重试', 'error')
-                console.log(res)
-            }
-        })
+                }, 1500)
+        }})
         .catch((err) => {
             showMsg('登录失败！' + err.msg || err.message || '请稍后重试', 'error')
             console.log(err)

@@ -12,10 +12,14 @@ import org.springframework.stereotype.Service;
 
 import java.util.regex.Pattern;
 
+/**
+ * user 的 service 层实现类
+ */
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService
 {
 
+    // 登录
     @Override
     public User login(String userNumber, String password)
     {
@@ -44,6 +48,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
     }
 
+    // 注册
     @Override
     public void register(String userNumber, String password, Integer role)
     {
@@ -91,9 +96,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         newUser.setUserNumber(userNumber);
         newUser.setPassword(PasswordUtil.encode(password));
         newUser.setRole(role);
-        save(newUser);
+
+        boolean res = save(newUser);
+
+        if (!res)
+        {
+            throw new ServiceException("注册失败！", 500);
+        }
     }
 
+    // 绑定宿舍
     @Override
     public void bindDormitory(Integer userId, String dormRoom)
     {
@@ -103,11 +115,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new ServiceException("用户id和宿舍地址不能为空！", 400);
         }
 
-        update(new LambdaUpdateWrapper<User>()
+        boolean res = update(new LambdaUpdateWrapper<User>()
                 .eq(User::getId, userId)
                 .set(User::getDormRoom, dormRoom));
+
+        if (!res)
+        {
+            throw new ServiceException("账户异常！", 500);
+        }
     }
 
+    // 修改密码
     @Override
     public void modifyPassword(Integer userId, String password)
     {
@@ -121,6 +139,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         User user = new User();
         user.setId(userId);
         user.setPassword(PasswordUtil.encode(password));
-        updateById(user);
+
+        boolean res = updateById(user);
+
+        if (!res)
+        {
+            throw new ServiceException("账户异常！", 500);
+        }
     }
 }

@@ -7,6 +7,9 @@ import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.Date;
 
+/**
+ * RepairOrder 实体类
+ */
 @Data
 @TableName("repair_order")
 public class RepairOrder
@@ -27,6 +30,9 @@ public class RepairOrder
     // 问题描述
     private String problem;
 
+    // 问题描述的图片地址
+    private String imageUrl;
+
     // 优先级
     private Integer priority;
 
@@ -34,10 +40,10 @@ public class RepairOrder
     private Integer status;
 
     // 维修人员id
-    private Integer staffId;
+    private Integer staffNumber;
 
-    // 维修人员姓名
-    private String staffName;
+    // 用户评价
+    private int rating;
 
     // 完成时间
     private Date completedTime;

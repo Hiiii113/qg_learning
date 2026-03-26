@@ -19,10 +19,11 @@ create table repair_order
     user_number    varchar(20)      null comment '报修人的学号',
     dorm_room      varchar(50)      null comment '报修人的宿舍地址',
     problem        text             not null comment '问题描述',
+    image_url      VARCHAR(500)     null comment '问题描述图片路径',
     priority       tinyint unsigned not null default 2 comment '紧急程度 1-紧急 2-普通 3-低',
     status         tinyint unsigned not null default 1 comment '状态 1-待受理 2-处理中 3-已完成 4-已取消',
-    staff_id       int unsigned              default null comment '维修人员id',
-    staff_name     varchar(20)               default null comment '维修人员姓名',
+    staff_number   int unsigned              default null comment '维修人员id',
+    rating        int unsigned              default null comment '评价等级',
     completed_time datetime                  default null comment '完成时间',
     create_time    datetime         not null default current_timestamp comment '创建时间',
     update_time    datetime         not null default current_timestamp on update current_timestamp comment '更新时间'

@@ -2,6 +2,9 @@ package hiiii113.util;
 
 import org.mindrot.jbcrypt.BCrypt;
 
+/**
+ * 密码加密用的 BCrypt
+ */
 public class PasswordUtil
 {
     // 加密

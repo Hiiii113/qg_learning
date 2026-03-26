@@ -2,9 +2,11 @@ package hiiii113.dto;
 
 import lombok.Data;
 
+/**
+ * 修改报修单
+ */
 @Data
 public class ModifyRepairOrderDto
 {
-    private Integer status;
-    private Integer staffId;
+    private String problem;
 }

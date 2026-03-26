@@ -3,49 +3,27 @@
         <div class="page-box">
             <h2>管理员端</h2>
 
-            <!-- 导航按钮 -->
             <div class="nav-bar">
-                <button :class="{ active: currentView === 'list' }" @click="currentView = 'list'">
+                <button :class="{ active: currentView === 'list' }" @click="switchView('list')">
                     所有报修单
                 </button>
                 <button
-                    :class="{ active: currentView === 'detail' }"
-                    @click="currentView = 'detail'"
-                >
-                    查看详情
-                </button>
-                <button
-                    :class="{ active: currentView === 'update' }"
-                    @click="currentView = 'update'"
-                >
-                    更新状态
-                </button>
-                <button
-                    :class="{ active: currentView === 'delete' }"
-                    @click="currentView = 'delete'"
-                >
-                    删除报修单
-                </button>
-                <button
                     :class="{ active: currentView === 'password' }"
-                    @click="currentView = 'password'"
+                    @click="switchView('password')"
                 >
                     修改密码
                 </button>
             </div>
 
-            <!-- 提示信息msg -->
-            <div v-if="msg" class="msg" :class="msgType">{{ msg }}</div>
+            <div v-if="message" class="message" :class="messageType">{{ message }}</div>
 
-            <!-- 所有报修单 -->
-            <div v-if="currentView === 'list'">
-                <div class="list-toolbar">
-                    <button class="btn-refresh" @click="selectRepairByStatus">↻ 刷新</button>
-                    <select
-                        v-model="selectStatus"
-                        @change="selectRepairByStatus"
-                        class="filter-select"
-                    >
+            <div v-if="currentView === 'list'" class="list-view">
+                <div class="toolbar">
+                    <button class="btn-primary" @click="loadRepairs" :disabled="loading">
+                        <span v-if="loading">加载中...</span>
+                        <span v-else>↻ 刷新</span>
+                    </button>
+                    <select v-model="filterStatus" @change="loadRepairs" class="filter-select">
                         <option :value="0">全部状态</option>
                         <option :value="1">待处理</option>
                         <option :value="2">处理中</option>
@@ -53,504 +31,708 @@
                         <option :value="4">已取消</option>
                     </select>
                 </div>
+
                 <div v-if="repairs.length === 0" class="empty">暂无报修单</div>
                 <table v-else class="table">
                     <thead>
                         <tr>
                             <th>ID</th>
                             <th>用户ID</th>
-                            <th>问题</th>
+                            <th>问题描述</th>
+                            <th>图片</th>
                             <th>状态</th>
                             <th>创建时间</th>
+                            <th>操作</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- 点击跳转详情页面 -->
-                        <tr v-for="item in repairs" :key="item.id" @click="viewDetail(item.id)">
+                        <tr v-for="item in repairs" :key="item.id" @click="openDetail(item.id)">
                             <td>{{ item.id }}</td>
                             <td>{{ item.userId }}</td>
-                            <td>{{ item.problem }}</td>
-                            <td>{{ statusMap[item.status] }}</td>
+                            <td class="problem-cell">{{ item.problem }}</td>
+                            <td>
+                                <img
+                                    v-if="item.imageUrl"
+                                    :src="getImageUrl(item.imageUrl)"
+                                    alt="报修图片"
+                                    class="table-img"
+                                    @click.stop="previewImage(item.imageUrl)"
+                                />
+                                <span v-else class="no-image">-</span>
+                            </td>
+                            <td>
+                                <span class="status-badge" :class="'status-' + item.status">{{
+                                    statusText(item.status)
+                                }}</span>
+                            </td>
                             <td>{{ item.createTime }}</td>
+                            <td>
+                                <button class="btn-action" @click.stop="openDetail(item.id)">
+                                    处理
+                                </button>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
 
-            <!-- 查看详情 -->
-            <div v-if="currentView === 'detail'">
-                <div class="form-item">
-                    <label>报修单 ID</label>
-                    <input v-model="detailId" type="number" placeholder="请输入报修单ID" />
-                </div>
-                <div class="actions">
-                    <button class="btn-primary" @click="loadDetail">查询</button>
-                    <button class="btn-ghost" @click="((updateId = ''), (updateStatus = 1))">
-                        清空
-                    </button>
-                </div>
-                <div v-if="detailInfo" class="detail-card">
-                    <p><strong>ID：</strong>{{ detailInfo.id }}</p>
-                    <p><strong>用户ID：</strong>{{ detailInfo.userId }}</p>
-                    <p><strong>状态：</strong>{{ statusMap[detailInfo.status] }}</p>
-                    <p><strong>问题：</strong>{{ detailInfo.problem }}</p>
-                    <p v-if="detailInfo.staffId !== null">
-                        <strong>维修员工id ：</strong>{{ detailInfo.staffId }}
-                    </p>
-                    <p><strong>创建时间：</strong>{{ detailInfo.createTime }}</p>
-                    <p><strong>更新时间：</strong>{{ detailInfo.updateTime }}</p>
-                </div>
-            </div>
-
-            <!-- 更新状态 -->
-            <div v-if="currentView === 'update'">
-                <div class="form-item">
-                    <label>报修单 ID</label>
-                    <input v-model="updateId" type="number" placeholder="请输入报修单ID" />
-                </div>
-                <div class="form-item">
-                    <label>目标状态</label>
-                    <select v-model="updateStatus">
-                        <option :value="1">待处理</option>
-                        <option :value="2">处理中</option>
-                        <option :value="3">已完成</option>
-                    </select>
-                </div>
-                <div class="actions">
-                    <button class="btn-primary" @click="handleUpdateStatus">保存</button>
-                    <button class="btn-ghost" @click="((updateId = ''), (updateStatus = 1))">
-                        清空
-                    </button>
-                </div>
-            </div>
-
-            <!-- 删除报修单 -->
-            <div v-if="currentView === 'delete'">
-                <div class="form-item">
-                    <label>报修单 ID</label>
-                    <input v-model="deleteId" type="number" placeholder="请输入报修单ID" />
-                </div>
-                <div class="actions">
-                    <button class="btn-danger" @click="handleDelete">确认删除</button>
-                    <button class="btn-ghost" @click="deleteId = ''">清空</button>
-                </div>
-            </div>
-
-            <!-- 修改密码 -->
-            <div v-if="currentView === 'password'">
+            <div v-if="currentView === 'password'" class="password-view">
                 <div class="form-item">
                     <label>新密码</label>
-                    <input v-model="newPassword" type="password" placeholder="请输入新密码" />
+                    <input
+                        v-model="newPassword"
+                        type="password"
+                        placeholder="请输入新密码"
+                        @keyup.enter="updatePassword"
+                    />
                 </div>
                 <div class="actions">
-                    <button class="btn-primary" @click="handleChangePassword">保存</button>
+                    <button class="btn-primary" @click="updatePassword" :disabled="submitting">
+                        保存
+                    </button>
                     <button class="btn-ghost" @click="newPassword = ''">清空</button>
                 </div>
             </div>
 
+            <div v-if="detailVisible" class="modal-mask" @click.self="closeDetail">
+                <div class="modal">
+                    <div class="modal-header">
+                        <strong>报修单详情</strong>
+                        <button class="btn-close" @click="closeDetail">×</button>
+                    </div>
+
+                    <div v-if="detailData" class="modal-content">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="label">ID</span
+                                ><span class="value">{{ detailData.id }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">用户ID</span
+                                ><span class="value">{{ detailData.userId }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">当前状态</span
+                                ><span
+                                    class="value status-badge"
+                                    :class="'status-' + detailData.status"
+                                    >{{ statusText(detailData.status) }}</span
+                                >
+                            </div>
+                            <div class="info-item">
+                                <span class="label">创建时间</span
+                                ><span class="value">{{ detailData.createTime }}</span>
+                            </div>
+                        </div>
+
+                        <div class="form-item">
+                            <label>修改状态</label>
+                            <select v-model="editStatus" :disabled="detailData.status >= 3">
+                                <option :value="1">待处理</option>
+                                <option :value="2">处理中</option>
+                                <option :value="3">已完成</option>
+                            </select>
+                        </div>
+
+                        <div class="form-item">
+                            <label>问题描述</label>
+                            <textarea
+                                v-model="editProblem"
+                                rows="3"
+                                placeholder="请输入问题描述"
+                            ></textarea>
+                        </div>
+
+                        <div class="form-item" v-if="detailData.imageUrl">
+                            <label>报修图片</label>
+                            <img
+                                :src="getImageUrl(detailData.imageUrl)"
+                                class="detail-img"
+                                @click="previewImage(detailData.imageUrl)"
+                            />
+                        </div>
+
+                        <div class="modal-actions">
+                            <button
+                                class="btn-primary"
+                                @click="saveAll"
+                                :disabled="submitting || !editProblem.trim()"
+                            >
+                                {{ submitting ? '保存中...' : '保存修改' }}
+                            </button>
+                            <button
+                                v-if="detailData.status < 3"
+                                class="btn-warning"
+                                @click="cancelOrder"
+                                :disabled="submitting"
+                            >
+                                取消报修
+                            </button>
+                            <button class="btn-danger" @click="deleteOrder" :disabled="submitting">
+                                删除
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div v-if="imageVisible" class="modal-mask" @click.self="closeImage">
+                <div class="image-modal">
+                    <img :src="imageSrc" class="preview-img" />
+                    <button class="btn-close" @click="closeImage">×</button>
+                </div>
+            </div>
+
             <div class="footer">
-                <span class="user-info">管理员 ID: {{ userInfo.id }}</span>
-                <button class="btn-logout" @click="handleLogout">退出登录</button>
+                <span class="user-info">管理员: {{ userInfo.id }}</span>
+                <button class="btn-logout" @click="logout">退出登录</button>
             </div>
         </div>
     </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { del, get, patch, put } from '@/utils/request.js'
 
 const router = useRouter()
-// 反序列化JSON字符串
 const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
 
-// 默认查看list
 const currentView = ref('list')
+const message = ref('')
+const messageType = ref('success')
+const loading = ref(false)
+const submitting = ref(false)
 
-// 提示消息
-const msg = ref('')
-const msgType = ref('success')
+const repairs = ref([])
+const filterStatus = ref(0)
+const newPassword = ref('')
 
-const showMsg = (text, type = 'success') => {
-    msg.value = text
-    msgType.value = type
+const detailVisible = ref(false)
+const detailData = ref(null)
+const editStatus = ref(1)
+const editProblem = ref('')
+
+const imageVisible = ref(false)
+const imageSrc = ref('')
+
+const statusMap = { 1: '待处理', 2: '处理中', 3: '已完成', 4: '已取消' }
+const statusText = (status) => statusMap[status] || '未知'
+
+const showMessage = (text, type = 'success') => {
+    message.value = text
+    messageType.value = type
     setTimeout(() => {
-        msg.value = ''
+        message.value = ''
     }, 3000)
 }
 
-// 状态映射
-const statusMap = { 1: '待处理', 2: '处理中', 3: '已完成', 4: '已取消' }
+const getImageUrl = (url) =>
+    url?.startsWith('http') ? url : `http://localhost:8081/${url?.replace(/^\/+/, '')}`
 
-// 数据
-const repairs = ref([])
-const detailId = ref('')
-const detailInfo = ref(null)
-const updateId = ref('')
-const updateStatus = ref(1)
-const deleteId = ref('')
-const newPassword = ref('')
-const selectStatus = ref(0)
+const switchView = (view) => {
+    currentView.value = view
+}
 
-// 加载所有报修单
-const loadAllRepairs = () => {
-    get('/repair-orders')
+const loadRepairs = () => {
+    loading.value = true
+    const api =
+        filterStatus.value === 0 ? '/repair-orders' : `/repair-orders/status/${filterStatus.value}`
+    get(api)
         .then((res) => {
             repairs.value = res.data || []
         })
-        .catch(() => showMsg('查询失败！', 'error'))
+        .catch(() => showMessage('加载失败', 'error'))
+        .finally(() => {
+            loading.value = false
+        })
 }
 
-// 根据状态筛选报修单
-const selectRepairByStatus = () => {
-    if (selectStatus.value === 0) {
-        loadAllRepairs()
-        return
-    } else {
-        get(`/repair-orders/status/${selectStatus.value}`)
-            .then((res) => {
-                repairs.value = res.data || []
-            })
-            .catch(() => showMsg('查询失败！', 'error'))
-    }
-}
-
-// 查看详情
-const loadDetail = () => {
-    if (detailId.value === '') {
-        showMsg('id不能为空！', 'error')
-        return
-    }
-    get(`/repair-orders/${detailId.value}`)
+const openDetail = (id) => {
+    if (!id) return
+    get(`/repair-orders/${id}`)
         .then((res) => {
-            detailInfo.value = res.data
-            showMsg('查询成功！')
+            detailData.value = res.data
+            editStatus.value = res.data.status || 1
+            editProblem.value = res.data.problem || ''
+            detailVisible.value = true
         })
-        .catch(() => showMsg('查询失败！', 'error'))
+        .catch(() => showMessage('加载详情失败', 'error'))
 }
 
-// 点击表格行跳转查看详情
-const viewDetail = (id) => {
-    detailId.value = id
-    currentView.value = 'detail'
-    loadDetail()
+const closeDetail = () => {
+    detailVisible.value = false
+    detailData.value = null
+    editStatus.value = 1
+    editProblem.value = ''
 }
 
-// 更新状态
-const handleUpdateStatus = () => {
-    if (updateId.value === '') {
-        showMsg('id不能为空！', 'error')
+const previewImage = (url) => {
+    imageSrc.value = getImageUrl(url)
+    imageVisible.value = true
+}
+
+const closeImage = () => {
+    imageVisible.value = false
+}
+
+const saveAll = async () => {
+    if (!detailData.value) return
+    const problem = editProblem.value.trim()
+    if (!problem) {
+        showMessage('问题描述不能为空', 'error')
         return
     }
-    const data = { status: updateStatus.value, staffId: userInfo.id }
-    patch(`/repair-orders/${updateId.value}`, data)
-        .then(() => {
-            showMsg('更新成功！')
-            updateId.value = ''
-            updateStatus.value = 1
-            loadAllRepairs()
+
+    submitting.value = true
+    try {
+        await patch(`/repair-orders/${detailData.value.id}`, {
+            status: editStatus.value,
+            staffNumber: userInfo.id,
+            problem: problem,
         })
-        .catch(() => showMsg('更新失败！', 'error'))
+        showMessage('保存成功')
+        closeDetail()
+        loadRepairs()
+    } catch (err) {
+        showMessage('保存失败！' + err.msg, 'error')
+    } finally {
+        submitting.value = false
+    }
 }
 
-// 删除
-const handleDelete = () => {
-    if (deleteId.value === '') {
-        showMsg('id不能为空！', 'error')
-        return
+const cancelOrder = async () => {
+    if (!detailData.value || !confirm('确定要取消此报修单吗？')) return
+    submitting.value = true
+    try {
+        await put(`/repair-orders/${detailData.value.id}/cancel`, {})
+        showMessage('取消成功')
+        closeDetail()
+        loadRepairs()
+    } catch (err) {
+        showMessage('取消失败！' + err.msg, 'error')
+    } finally {
+        submitting.value = false
     }
-    del(`/repair-orders/${deleteId.value}`)
-        .then(() => {
-            showMsg('删除成功！')
-            deleteId.value = ''
-            loadAllRepairs()
-        })
-        .catch(() => showMsg('删除失败！', 'error'))
 }
 
-// 修改密码
-const handleChangePassword = () => {
-    if (newPassword.value === '') {
-        showMsg('新密码不能为空！', 'error')
+const deleteOrder = async () => {
+    if (!detailData.value || !confirm('确定要删除此报修单吗？此操作不可恢复！')) return
+    submitting.value = true
+    try {
+        await del(`/repair-orders/${detailData.value.id}`)
+        showMessage('删除成功')
+        closeDetail()
+        loadRepairs()
+    } catch (err) {
+        showMessage('删除失败！' + err.msg, 'error')
+    } finally {
+        submitting.value = false
+    }
+}
+
+const updatePassword = () => {
+    if (!newPassword.value) {
+        showMessage('请输入新密码', 'error')
         return
     }
-    const data = { password: newPassword.value }
-    put(`/users/${userInfo.id}/password`, data)
+    submitting.value = true
+    put(`/users/${userInfo.id}/password`, { password: newPassword.value })
         .then(() => {
-            showMsg('修改成功！')
+            showMessage('修改成功')
             newPassword.value = ''
         })
-        .catch(() => showMsg('修改失败！', 'error'))
+        .catch(() => showMessage('修改失败', 'error'))
+        .finally(() => {
+            submitting.value = false
+        })
 }
 
-// 退出登录
-const handleLogout = () => {
+const logout = () => {
     localStorage.removeItem('userInfo')
-    router.push('/login')
+    get('/users/logout').finally(() => router.push('/login'))
 }
 
-// 进入页面加载数据
-loadAllRepairs()
+onMounted(() => {
+    loadRepairs()
+})
 </script>
 
 <style scoped>
 .page-container {
     min-height: 100vh;
     display: flex;
-    align-items: flex-start;
     justify-content: center;
-    background: #f5f5f5;
+    background: #f0f2f5;
     padding: 40px 20px;
 }
-
 .page-box {
-    width: 700px;
-    padding: 30px 40px;
+    width: 900px;
     background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    padding: 30px 40px;
 }
-
 h2 {
-    margin: 0 0 20px;
+    margin: 0 0 24px;
     text-align: center;
-    color: #333;
+    color: #1a1a1a;
+    font-size: 24px;
 }
 
-/* 导航栏 */
 .nav-bar {
     display: flex;
     gap: 8px;
-    flex-wrap: wrap;
     margin-bottom: 20px;
 }
-
 .nav-bar button {
-    padding: 8px 14px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    padding: 10px 20px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
     background: #fff;
     color: #666;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 14px;
+    transition: all 0.2s;
 }
-
+.nav-bar button:hover {
+    border-color: #409eff;
+    color: #409eff;
+}
 .nav-bar button.active {
     background: #409eff;
     color: #fff;
     border-color: #409eff;
 }
 
-/* 提示消息 */
-.msg {
-    padding: 10px 14px;
-    border-radius: 4px;
+.message {
+    padding: 12px 16px;
+    border-radius: 6px;
     margin-bottom: 16px;
     font-size: 14px;
 }
-
-.msg.success {
+.message.success {
     background: #f0f9eb;
     color: #67c23a;
-    border: 1px solid #c2e7b0;
+    border: 1px solid #e1f3d8;
 }
-
-.msg.error {
+.message.error {
     background: #fef0f0;
     color: #f56c6c;
-    border: 1px solid #fbc4c4;
+    border: 1px solid #fde2e2;
 }
 
-/* 表单 */
+.toolbar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    align-items: center;
+}
+.filter-select {
+    padding: 8px 12px;
+    border: 1px solid #dcdfe6;
+    border-radius: 6px;
+    width: 140px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.table th,
+.table td {
+    padding: 12px;
+    text-align: left;
+    font-size: 13px;
+    border-bottom: 1px solid #f0f0f0;
+}
+.table th {
+    background: #fafafa;
+    color: #666;
+    font-weight: 600;
+}
+.table tr:hover td {
+    background: #f8f9fa;
+}
+.table tr {
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.problem-cell {
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.table-img {
+    width: 50px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 4px;
+    cursor: pointer;
+    border: 1px solid #eee;
+}
+.no-image {
+    color: #999;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+}
+.status-1 {
+    background: #fff3e0;
+    color: #ff9800;
+}
+.status-2 {
+    background: #e3f2fd;
+    color: #2196f3;
+}
+.status-3 {
+    background: #e8f5e9;
+    color: #4caf50;
+}
+.status-4 {
+    background: #f5f5f5;
+    color: #999;
+}
+
+.btn-action {
+    padding: 6px 14px;
+    background: #409eff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+.btn-action:hover {
+    background: #66b1ff;
+}
+
+.empty {
+    padding: 40px;
+    text-align: center;
+    color: #999;
+    border: 1px dashed #e0e0e0;
+    border-radius: 8px;
+}
+
 .form-item {
     margin-bottom: 16px;
 }
-
 .form-item label {
     display: block;
     margin-bottom: 6px;
     color: #555;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 500;
 }
-
-input,
-select {
+.form-item input,
+.form-item select,
+.form-item textarea {
     width: 100%;
     padding: 10px 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    border: 1px solid #dcdfe6;
+    border-radius: 6px;
     font-size: 14px;
     box-sizing: border-box;
+    transition: border-color 0.2s;
 }
-
-input:focus,
-select:focus {
+.form-item input:focus,
+.form-item select:focus,
+.form-item textarea:focus {
     outline: none;
     border-color: #409eff;
 }
-
-/* 按钮 */
-.actions {
-    margin-top: 10px;
-    display: flex;
-    gap: 10px;
+.form-item textarea {
+    resize: vertical;
+    min-height: 80px;
 }
 
+.actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
 .btn-primary {
-    padding: 10px 20px;
+    padding: 10px 24px;
     background: #409eff;
     color: #fff;
     border: none;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
     font-size: 14px;
+    transition: background 0.2s;
 }
-
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
     background: #66b1ff;
 }
-
-.btn-danger {
-    padding: 10px 20px;
-    background: #f56c6c;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
+.btn-primary:disabled {
+    background: #a0cfff;
+    cursor: not-allowed;
 }
-
-.btn-danger:hover {
-    background: #f78989;
-}
-
 .btn-ghost {
-    padding: 10px 20px;
+    padding: 10px 24px;
     background: #fff;
     color: #666;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    border: 1px solid #dcdfe6;
+    border-radius: 6px;
     cursor: pointer;
     font-size: 14px;
 }
-
 .btn-ghost:hover {
+    border-color: #409eff;
+    color: #409eff;
+}
+.btn-danger {
+    padding: 10px 24px;
+    background: #fff;
+    color: #f56c6c;
+    border: 1px solid #f56c6c;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+}
+.btn-danger:hover:not(:disabled) {
+    background: #fef0f0;
+}
+.btn-warning {
+    padding: 10px 24px;
+    background: #fff;
+    color: #e6a23c;
+    border: 1px solid #e6a23c;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+}
+.btn-warning:hover:not(:disabled) {
+    background: #fdf6ec;
+}
+
+.modal-mask {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+.modal {
+    width: 560px;
+    max-width: 95vw;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+}
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    background: #fafafa;
+}
+.modal-header strong {
+    font-size: 16px;
     color: #333;
 }
-
-.btn-refresh {
-    padding: 6px 14px;
-    background: #fff;
-    border: 1px solid #ddd;
+.btn-close {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    font-size: 24px;
+    color: #999;
+    cursor: pointer;
     border-radius: 4px;
-    cursor: pointer;
+}
+.btn-close:hover {
+    background: #f0f0f0;
+    color: #333;
+}
+.modal-content {
+    padding: 20px;
+}
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+.info-item {
+    display: flex;
+    gap: 8px;
     font-size: 13px;
-    margin-bottom: 12px;
 }
-
-/* 表格 */
-.table {
-    width: 100%;
-    border-collapse: collapse;
+.info-item .label {
+    color: #888;
+    min-width: 60px;
 }
-
-.table th,
-.table td {
-    padding: 10px 12px;
-    border-bottom: 1px solid #eee;
-    text-align: left;
-    font-size: 13px;
+.info-item .value {
+    color: #333;
 }
-
-.table th {
-    background: #fafafa;
-    color: #555;
-    font-weight: 600;
-}
-
-.table tr {
-    cursor: pointer;
-}
-
-.table tr:hover td {
-    background: #f5f7fa;
-}
-
-/* 详情卡片 */
-.detail-card {
-    margin-top: 16px;
-    padding: 16px;
-    background: #fafafa;
+.detail-img {
+    max-width: 100%;
+    max-height: 200px;
     border-radius: 6px;
+    cursor: pointer;
     border: 1px solid #eee;
 }
-
-.detail-card p {
-    margin: 6px 0;
-    font-size: 14px;
-    color: #333;
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    flex-wrap: wrap;
 }
 
-.empty {
-    padding: 30px;
-    text-align: center;
-    color: #999;
-    border: 1px dashed #ddd;
-    border-radius: 6px;
+.image-modal {
+    max-width: 90vw;
+    max-height: 90vh;
+    position: relative;
+}
+.preview-img {
+    max-width: 100%;
+    max-height: 85vh;
+    border-radius: 8px;
+}
+.image-modal .btn-close {
+    position: absolute;
+    top: -40px;
+    right: 0;
+    color: #fff;
 }
 
 .footer {
     margin-top: 30px;
-    padding-top: 16px;
-    border-top: 1px solid #eee;
+    padding-top: 20px;
+    border-top: 1px solid #f0f0f0;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
-
 .user-info {
-    color: #999;
+    color: #888;
     font-size: 13px;
 }
-
 .btn-logout {
     padding: 8px 16px;
     background: #fff;
     border: 1px solid #f56c6c;
     color: #f56c6c;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
     font-size: 13px;
 }
-
 .btn-logout:hover {
     background: #fef0f0;
-}
-
-.list-toolbar {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-.btn-refresh {
-    padding: 8px 16px;
-    background: #409eff;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-}
-
-.filter-select {
-    width: 200px;
-    padding: 8px;
-    border: 1px solid #dcdfe6;
-    border-radius: 4px;
-    cursor: pointer;
 }
 </style>
