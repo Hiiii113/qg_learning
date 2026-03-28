@@ -1,5 +1,6 @@
 package hiiii113.service;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import hiiii113.entity.RepairOrder;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,11 +25,14 @@ public interface RepairOrderService extends IService<RepairOrder>
     // 查看自己的报修单
     List<RepairOrder> getUserRepairOrder(Integer userId);
 
+    // 分页查看自己的报修单
+    IPage<RepairOrder> getUserRepairOrderByPage(Integer userId, Integer currentPage, Integer size);
+
     // 获取所有的报修单（管理员）
-    List<RepairOrder> getAllRepairOrder();
+    IPage<RepairOrder> getAllRepairOrder(Integer currentPage, Integer size);
 
     // 查看特定状态的报修单
-    List<RepairOrder> getRepairOrderByStatus(Integer status);
+    IPage<RepairOrder> getRepairOrderByStatus(Integer currentPage, Integer size, Integer status);
 
     // 获取报修单详情
     RepairOrder getRepairOrderInfo(Integer id);

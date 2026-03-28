@@ -3,12 +3,12 @@ package hiiii113.controller;
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import hiiii113.logAop.LogAnnotation;
 import hiiii113.dto.BindDormitoryDto;
 import hiiii113.dto.ModifyPasswordDto;
 import hiiii113.dto.UserLoginDto;
 import hiiii113.dto.UserRegisterDto;
 import hiiii113.entity.User;
+import hiiii113.logAop.LogAnnotation;
 import hiiii113.service.UserService;
 import hiiii113.util.Result;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +22,7 @@ public class UserController
 {
     // 单构造器自动注入
     private final UserService userService;
+
     public UserController(UserService userService)
     {
         this.userService = userService;
@@ -32,9 +33,13 @@ public class UserController
     @PostMapping("/login")
     public Result<String> login(@RequestBody UserLoginDto dto)
     {
+        // 调用 Sa-Token 登录功能
         userService.login(dto.getUserNumber(), dto.getPassword());
+        // 根据 userNumber 获取 userId
+        User user = userService.getOne(new LambdaQueryWrapper<User>().eq(User::getUserNumber, dto.getUserNumber()));
+        int userId = user.getId();
         // 调用 Sa-Token 实现登录鉴权
-        StpUtil.login(dto.getUserNumber());
+        StpUtil.login(userId);
         // 获取 Token
         String token = StpUtil.getTokenValue();
         // 返回信息和 Token
@@ -63,32 +68,37 @@ public class UserController
 
     // 绑定宿舍
     @LogAnnotation(module = "users", operator = "绑定宿舍")
-    @PostMapping("/{userId}/dormitories")
+    @PostMapping("/dormitories")
     @SaCheckLogin
-    public Result<Void> bindDormitory(@PathVariable int userId, @RequestBody BindDormitoryDto dto)
+    public Result<Void> bindDormitory(@RequestBody BindDormitoryDto dto)
     {
+        // 从 Token 获取用户 id
+        int userId = StpUtil.getLoginIdAsInt();
         userService.bindDormitory(userId, dto.getDormRoom());
         return Result.success("绑定成功！", 200);
     }
 
     // 修改密码
     @LogAnnotation(module = "users", operator = "修改密码")
-    @PutMapping("/{userId}/password")
+    @PutMapping("/password")
     @SaCheckLogin
-    public Result<Void> modifyPassword(@PathVariable int userId, @RequestBody ModifyPasswordDto dto)
+    public Result<Void> modifyPassword(@RequestBody ModifyPasswordDto dto)
     {
+        // 从 Token 获取用户 id
+        int userId = StpUtil.getLoginIdAsInt();
         userService.modifyPassword(userId, dto.getPassword());
         return Result.success("修改成功！", 200);
     }
 
     // 获取用户信息
     @LogAnnotation(module = "users", operator = "获取用户信息")
-    @GetMapping("/info")
+    @GetMapping("/me")
     @SaCheckLogin
     public Result<User> getUserInfo()
     {
-        String userNumber = StpUtil.getLoginIdAsString();
-        User user = userService.getOne(new LambdaQueryWrapper<User>().eq(User::getUserNumber, userNumber));
+        // 从 Token 获取用户工号
+        int userId = StpUtil.getLoginIdAsInt();
+        User user = userService.getOne(new LambdaQueryWrapper<User>().eq(User::getId, userId));
         return Result.success("查询成功！", user, 200);
     }
 }

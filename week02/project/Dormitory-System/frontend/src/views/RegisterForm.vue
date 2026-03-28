@@ -1,21 +1,39 @@
 <template>
-    <div class="login-container">
-        <div class="login-box">
-            <h2>登录</h2>
+    <div class="register-container">
+        <div class="register-box">
+            <h2>注册</h2>
+
+            <!-- 消息 -->
             <div v-if="msg" class="msg" :class="msgType">{{ msg }}</div>
-            <!-- 登录表单 -->
-            <form @submit.prevent="handleLogin">
+
+            <!-- 注册表单 -->
+            <form @submit.prevent="handleRegister">
                 <div class="form-item">
                     <input v-model="form.userNumber" type="text" placeholder="学号/工号" required />
                 </div>
                 <div class="form-item">
+                    <select v-model="form.role" class="role-select">
+                        <option :value="0" disabled hidden>身份</option>
+                        <option :value="1">学生</option>
+                        <option :value="2">管理员</option>
+                    </select>
+                </div>
+                <div class="form-item">
                     <input v-model="form.password" type="password" placeholder="密码" required />
                 </div>
-                <button type="submit" class="btn-primary">登录</button>
+                <div class="form-item">
+                    <input
+                        v-model="form.confirmPassword"
+                        type="password"
+                        placeholder="确认密码"
+                        required
+                    />
+                </div>
+                <button type="submit" class="btn-primary">注册</button>
             </form>
             <p class="switch-text">
-                还没有账号？
-                <router-link to="/register">立即注册</router-link>
+                已有账号？
+                <router-link to="/login">立即登录</router-link>
             </p>
         </div>
     </div>
@@ -24,7 +42,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { get, post } from '@/utils/request.js'
+import { post } from '../utils/request.js'
 
 const router = useRouter()
 
@@ -32,6 +50,8 @@ const router = useRouter()
 const form = ref({
     userNumber: '',
     password: '',
+    confirmPassword: '',
+    role: 0,
 })
 
 const msg = ref('')
@@ -46,50 +66,50 @@ const showMsg = (text, type = 'success') => {
     }, 3000)
 }
 
-const handleLogin = async () => {
+// 处理注册操作
+const handleRegister = async () => {
+    // 验证
+    if (form.value.password !== form.value.confirmPassword) {
+        showMsg('两次密码输入不一致', 'error')
+        return
+    }
     if (!form.value.userNumber || !form.value.password) {
-        alert('请输入用户名和密码')
+        showMsg('请填写完整信息', 'error')
+        return
+    }
+    if (form.value.role === 0) {
+        showMsg('请选择身份！', 'error')
         return
     }
 
     // 封装返回对象
-    const loginData = {
+    const registerData = {
         userNumber: form.value.userNumber,
         password: form.value.password,
+        role: form.value.role,
     }
 
-    post('/users/login', loginData)
-        .then( async (res) => {
-            if (res.code === 200) {
-                localStorage.setItem('token', res.data)
-                // 获取 userInfo 并等待请求完成
-                const userRes = await get('/users/info')
-                // 存在 localStorage 和变量里
-                const userInfo = userRes.data
-                localStorage.setItem('userInfo', JSON.stringify(userInfo))
-                // 提示
-                showMsg('登录成功！正在跳转...', 'success')
-                // 跳转
+    // 请求
+    post('/users', registerData)
+        .then((res) => {
+            if (res.code === 201) {
+                showMsg('注册成功！正在跳转...')
                 setTimeout(() => {
-                    // 直接用 userInfo 判断角色
-                    if (userInfo.role === 1) {
-                        router.push('/student')
-                    } else if (userInfo.role === 2) {
-                        router.push('/admin')
-                    } else {
-                        showMsg('身份异常，请联系管理员！', 'error')
-                    }
-                }, 1500)
-        }})
+                    router.push('/login')
+                }, 3000)
+            } else {
+                showMsg('注册失败！' + res.msg || '请稍后再试', 'error')
+            }
+        })
         .catch((err) => {
-            showMsg('登录失败！' + err.msg || err.message || '请稍后重试', 'error')
+            showMsg('注册失败！' + err.msg || err.message || '请稍后再试', 'error')
             console.log(err)
         })
 }
 </script>
 
 <style scoped>
-.login-container {
+.register-container {
     min-height: 100vh;
     display: flex;
     align-items: center;
@@ -97,7 +117,7 @@ const handleLogin = async () => {
     background: #f5f5f5;
 }
 
-.login-box {
+.register-box {
     width: 360px;
     padding: 40px;
     background: #fff;
@@ -125,6 +145,22 @@ input {
 }
 
 input:focus {
+    outline: none;
+    border-color: #409eff;
+}
+
+.role-select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+    background: #fff;
+    cursor: pointer;
+}
+
+.role-select:focus {
     outline: none;
     border-color: #409eff;
 }

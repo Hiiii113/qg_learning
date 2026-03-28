@@ -1,6 +1,9 @@
 package hiiii113.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import hiiii113.entity.RepairOrder;
 import hiiii113.exception.ServiceException;
@@ -19,6 +22,13 @@ import java.util.List;
 @Service
 public class RepairOrderServiceImpl extends ServiceImpl<RepairOrderMapper, RepairOrder> implements RepairOrderService
 {
+    private final RepairOrderMapper repairOrderMapper;
+
+    public RepairOrderServiceImpl(RepairOrderMapper repairOrderMapper)
+    {
+        this.repairOrderMapper = repairOrderMapper;
+    }
+
     // 创建报修单
     @Override
     public Integer createRepairOrder(Integer userId, String problem)
@@ -115,23 +125,52 @@ public class RepairOrderServiceImpl extends ServiceImpl<RepairOrderMapper, Repai
                 .list();
     }
 
+    // 分页获取用户的报修单
+    @Override
+    public IPage<RepairOrder> getUserRepairOrderByPage(Integer userId, Integer currentPage, Integer size)
+    {
+        if (userId == null)
+        {
+            throw new ServiceException("用户id不能为空！", 400);
+        }
+
+        Page<RepairOrder> page = new Page<>(currentPage, size);
+        LambdaQueryWrapper<RepairOrder> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(RepairOrder::getUserId, userId)
+                .orderByDesc(RepairOrder::getCreateTime);
+
+        return repairOrderMapper.selectPage(page, wrapper);
+    }
+
     // 获取所有用户的报修单
     @Override
-    public List<RepairOrder> getAllRepairOrder()
+    public IPage<RepairOrder> getAllRepairOrder(Integer currentPage, Integer size)
     {
-        return lambdaQuery()
-                .orderByDesc(RepairOrder::getCreateTime)
-                .list();
+        // 构造分页对象
+        Page<RepairOrder> page = new Page<>(currentPage, size);
+
+        // 构造查询条件
+        LambdaQueryWrapper<RepairOrder> wrapper = new LambdaQueryWrapper<>();
+        wrapper.orderByDesc(RepairOrder::getCreateTime); // 排序
+
+        // 调用分页查询方法并返回
+        return repairOrderMapper.selectPage(page, wrapper);
     }
 
     // 获取对应状态的报修单
     @Override
-    public List<RepairOrder> getRepairOrderByStatus(Integer status)
+    public IPage<RepairOrder> getRepairOrderByStatus(Integer currentPage, Integer size, Integer status)
     {
-        return lambdaQuery()
-                .eq(RepairOrder::getStatus, status)
-                .orderByDesc(RepairOrder::getCreateTime)
-                .list();
+        // 构造分页对象
+        Page<RepairOrder> page = new Page<>(currentPage, size);
+
+        // 构造查询条件
+        LambdaQueryWrapper<RepairOrder> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(RepairOrder::getStatus, status) // 查询对应状态的
+                .orderByDesc(RepairOrder::getCreateTime); // 排序
+
+        // 调用分页查询方法并返回
+        return repairOrderMapper.selectPage(page, wrapper);
     }
 
     // 获取单个报修单

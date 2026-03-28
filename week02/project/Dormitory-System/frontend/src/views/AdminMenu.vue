@@ -3,6 +3,7 @@
         <div class="page-box">
             <h2>管理员端</h2>
 
+            <!-- 顶部导航栏，点击跳转 -->
             <div class="nav-bar">
                 <button :class="{ active: currentView === 'list' }" @click="switchView('list')">
                     所有报修单
@@ -15,15 +16,17 @@
                 </button>
             </div>
 
+            <!-- 消息 -->
             <div v-if="message" class="message" :class="messageType">{{ message }}</div>
 
+            <!-- 刷新按钮和筛选下拉框 -->
             <div v-if="currentView === 'list'" class="list-view">
                 <div class="toolbar">
                     <button class="btn-primary" @click="loadRepairs" :disabled="loading">
                         <span v-if="loading">加载中...</span>
                         <span v-else>↻ 刷新</span>
                     </button>
-                    <select v-model="filterStatus" @change="loadRepairs" class="filter-select">
+                    <select v-model="filterStatus" @change="currentPage = 1; loadRepairs()" class="filter-select">
                         <option :value="0">全部状态</option>
                         <option :value="1">待处理</option>
                         <option :value="2">处理中</option>
@@ -32,6 +35,7 @@
                     </select>
                 </div>
 
+                <!-- 报修单表格 -->
                 <div v-if="repairs.length === 0" class="empty">暂无报修单</div>
                 <table v-else class="table">
                     <thead>
@@ -74,8 +78,20 @@
                         </tr>
                     </tbody>
                 </table>
+
+                <!-- 分页 -->
+                <div class="pagination" v-if="totalPages > 0">
+                    <button class="btn-page" :disabled="currentPage <= 1" @click="changePage(currentPage - 1)">
+                        上一页
+                    </button>
+                    <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
+                    <button class="btn-page" :disabled="currentPage >= totalPages" @click="changePage(currentPage + 1)">
+                        下一页
+                    </button>
+                </div>
             </div>
 
+            <!-- 修改密码 -->
             <div v-if="currentView === 'password'" class="password-view">
                 <div class="form-item">
                     <label>新密码</label>
@@ -94,6 +110,7 @@
                 </div>
             </div>
 
+            <!-- 详情页面 -->
             <div v-if="detailVisible" class="modal-mask" @click.self="closeDetail">
                 <div class="modal">
                     <div class="modal-header">
@@ -209,6 +226,11 @@ const repairs = ref([])
 const filterStatus = ref(0)
 const newPassword = ref('')
 
+const currentPage = ref(1)
+const pageSize = ref(10)
+const totalPages = ref(0)
+const totalCount = ref(0)
+
 const detailVisible = ref(false)
 const detailData = ref(null)
 const editStatus = ref(1)
@@ -237,16 +259,27 @@ const switchView = (view) => {
 
 const loadRepairs = () => {
     loading.value = true
-    const api =
-        filterStatus.value === 0 ? '/repair-orders' : `/repair-orders/status/${filterStatus.value}`
+    let api = `/repair-orders?page=${currentPage.value}&size=${pageSize.value}`
+    if (filterStatus.value !== 0) {
+        api += `&status=${filterStatus.value}`
+    }
     get(api)
         .then((res) => {
-            repairs.value = res.data || []
+            const pageData = res.data
+            repairs.value = pageData.records || []
+            totalCount.value = pageData.total || 0
+            totalPages.value = pageData.pages || 0
         })
         .catch(() => showMessage('加载失败', 'error'))
         .finally(() => {
             loading.value = false
         })
+}
+
+const changePage = (page) => {
+    if (page < 1 || page > totalPages.value) return
+    currentPage.value = page
+    loadRepairs()
 }
 
 const openDetail = (id) => {
@@ -338,7 +371,7 @@ const updatePassword = () => {
         return
     }
     submitting.value = true
-    put(`/users/${userInfo.id}/password`, { password: newPassword.value })
+    put(`/users/password`, { password: newPassword.value })
         .then(() => {
             showMessage('修改成功')
             newPassword.value = ''
@@ -734,5 +767,35 @@ h2 {
 }
 .btn-logout:hover {
     background: #fef0f0;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-top: 20px;
+    padding: 16px 0;
+}
+.btn-page {
+    padding: 8px 16px;
+    background: #fff;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #606266;
+}
+.btn-page:hover:not(:disabled) {
+    border-color: #409eff;
+    color: #409eff;
+}
+.btn-page:disabled {
+    color: #c0c4cc;
+    cursor: not-allowed;
+}
+.page-info {
+    font-size: 13px;
+    color: #606266;
 }
 </style>

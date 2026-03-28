@@ -3,6 +3,7 @@
         <div class="page-box">
             <h2>学生端</h2>
 
+            <!-- 顶部选择导航栏 -->
             <div class="nav-bar">
                 <button :class="{ active: currentView === 'bind' }" @click="currentView = 'bind'">
                     绑定宿舍
@@ -24,8 +25,10 @@
                 </button>
             </div>
 
+            <!-- 消息 -->
             <div v-if="message" class="message" :class="messageType">{{ message }}</div>
 
+            <!-- 绑定宿舍 -->
             <div v-if="currentView === 'bind'" class="bind-view">
                 <div class="form-item">
                     <label>宿舍号</label>
@@ -39,6 +42,7 @@
                 </div>
             </div>
 
+            <!-- 创建报修单 -->
             <div v-if="currentView === 'create'" class="create-view">
                 <div class="form-item">
                     <label>问题描述</label>
@@ -73,6 +77,7 @@
                 </div>
             </div>
 
+            <!-- 我的报修单 -->
             <div v-if="currentView === 'repairs'" class="repairs-view">
                 <div class="toolbar">
                     <button class="btn-primary" @click="loadMyRepairs" :disabled="loading">
@@ -120,8 +125,20 @@
                         </tr>
                     </tbody>
                 </table>
+
+                <!-- 分页 -->
+                <div class="pagination" v-if="totalPages > 0">
+                    <button class="btn-page" :disabled="currentPage <= 1" @click="changePage(currentPage - 1)">
+                        上一页
+                    </button>
+                    <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
+                    <button class="btn-page" :disabled="currentPage >= totalPages" @click="changePage(currentPage + 1)">
+                        下一页
+                    </button>
+                </div>
             </div>
 
+            <!-- 修改密码 -->
             <div v-if="currentView === 'password'" class="password-view">
                 <div class="form-item">
                     <label>新密码</label>
@@ -140,6 +157,7 @@
                 </div>
             </div>
 
+            <!-- 查看详情 -->
             <div v-if="detailVisible" class="modal-mask" @click.self="closeDetail">
                 <div class="modal">
                     <div class="modal-header">
@@ -281,6 +299,11 @@ const fileInputRef = ref(null)
 const repairs = ref([])
 const newPassword = ref('')
 
+const currentPage = ref(1)
+const pageSize = ref(10)
+const totalPages = ref(0)
+const totalCount = ref(0)
+
 const detailVisible = ref(false)
 const detailData = ref(null)
 const editProblem = ref('')
@@ -311,7 +334,7 @@ const bindDorm = () => {
         return
     }
     submitting.value = true
-    post(`/users/${userInfo.value.id}/dormitories`, { dormRoom: dormRoom.value })
+    post(`/users/dormitories`, { dormRoom: dormRoom.value })
         .then(() => {
             showMessage('绑定成功')
             dormRoom.value = ''
@@ -324,7 +347,7 @@ const bindDorm = () => {
 }
 
 const refreshUserInfo = () => {
-    get('/users/info')
+    get('/users/me')
         .then((res) => {
             localStorage.setItem('userInfo', JSON.stringify(res.data))
             userInfo.value = res.data
@@ -395,14 +418,23 @@ const submitRepair = async () => {
 const loadMyRepairs = () => {
     currentView.value = 'repairs'
     loading.value = true
-    get(`/repair-orders/user/${userInfo.value.id}`)
+    get(`/repair-orders/user/${userInfo.value.id}/repair-orders?page=${currentPage.value}&size=${pageSize.value}`)
         .then((res) => {
-            repairs.value = res.data || []
+            const pageData = res.data
+            repairs.value = pageData.records || []
+            totalCount.value = pageData.total || 0
+            totalPages.value = pageData.pages || 0
         })
         .catch(() => showMessage('加载失败', 'error'))
         .finally(() => {
             loading.value = false
         })
+}
+
+const changePage = (page) => {
+    if (page < 1 || page > totalPages.value) return
+    currentPage.value = page
+    loadMyRepairs()
 }
 
 const openDetail = (id) => {
@@ -493,7 +525,9 @@ const submitRating = async (rating) => {
     if (!detailData.value?.id || detailData.value.rating > 0) return
     submitting.value = true
     try {
-        await post(`/repair-orders/rating/${rating}`, { repairOrderId: detailData.value.id })
+        await post(`/repair-orders/${detailData.value.id}/rating`, {
+            rating: rating,
+        })
         detailData.value.rating = rating
         showMessage('评价成功')
         loadMyRepairs()
@@ -510,7 +544,7 @@ const updatePassword = () => {
         return
     }
     submitting.value = true
-    put(`/users/${userInfo.value.id}/password`, { password: newPassword.value })
+    put(`/users/password`, { password: newPassword.value })
         .then(() => {
             showMessage('修改成功')
             newPassword.value = ''
@@ -954,5 +988,35 @@ h2 {
 }
 .btn-logout:hover {
     background: #fef0f0;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-top: 20px;
+    padding: 16px 0;
+}
+.btn-page {
+    padding: 8px 16px;
+    background: #fff;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #606266;
+}
+.btn-page:hover:not(:disabled) {
+    border-color: #409eff;
+    color: #409eff;
+}
+.btn-page:disabled {
+    color: #c0c4cc;
+    cursor: not-allowed;
+}
+.page-info {
+    font-size: 13px;
+    color: #606266;
 }
 </style>

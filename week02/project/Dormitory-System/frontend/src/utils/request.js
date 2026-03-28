@@ -1,4 +1,5 @@
 import axios from 'axios';
+import router from '@/router/index.js'
 
 // 创建axios实例
 const instance = axios.create({
@@ -24,6 +25,10 @@ instance.interceptors.response.use(
         const {code, msg} = response.data
         if (code === 200 || code === 201) {
             return response.data
+        } else if (code === 401) {
+            localStorage.removeItem('token')
+            router.push('/login')
+            alert('登录已过期，请重新登录')
         } else {
             console.error(msg)
             return Promise.reject(response.data)

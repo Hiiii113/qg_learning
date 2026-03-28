@@ -8,5 +8,5 @@ import lombok.Data;
 @Data
 public class UserRatingDto
 {
-    private Integer repairOrderId;
+    private Integer rating;
 }
