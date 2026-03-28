@@ -88,7 +88,8 @@ const handleLogin = async () => {
             }
         })
         .catch((err) => {
-            showMsg('登录失败！' + err.msg || err.message || '请稍后重试', 'error')
+            const errorMsg = err.msg || err.message || '请稍后重试'
+            showMsg('登录失败！' + errorMsg, 'error')
             console.log(err)
         })
 }

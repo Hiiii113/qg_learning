@@ -1,6 +1,7 @@
 package hiiii113.controller;
 
 import cn.dev33.satoken.annotation.SaCheckLogin;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import hiiii113.dto.CreateRepairOrderDto;
@@ -31,6 +32,7 @@ public class RepairOrderController
     // 创建报修单
     @LogAnnotation(module = "repair-orders", operator = "创建报修单")
     @PostMapping
+    @SaCheckPermission("order:add")
     @SaCheckLogin
     public Result<Integer> createRepairOrder(@RequestBody CreateRepairOrderDto dto)
     {
@@ -66,6 +68,7 @@ public class RepairOrderController
     // 查看单个用户报修单（分页）
     @LogAnnotation(module = "repair-orders", operator = "查看单个用户报修单")
     @GetMapping("/user/{userId}/repair-orders")
+    @SaCheckPermission("order:listMe")
     @SaCheckLogin
     public Result<IPage<RepairOrder>> getUserRepairOrders(@PathVariable int userId,
                                                           @RequestParam(defaultValue = "1") Integer page,
@@ -78,6 +81,7 @@ public class RepairOrderController
     // 查看报修单列表
     @LogAnnotation(module = "repair-orders", operator = "查看报修单列表")
     @GetMapping
+    @SaCheckPermission("order:listAll")
     @SaCheckLogin
     public Result<IPage<RepairOrder>> getRepairOrders(@RequestParam(defaultValue = "1") Integer page, // 默认第一页
                                                       @RequestParam(defaultValue = "10") Integer size, // 默认一页10条
@@ -108,6 +112,7 @@ public class RepairOrderController
     // 修改单个报修单
     @LogAnnotation(module = "repair-orders", operator = "修改单个报修单")
     @PutMapping("/{repairOrderId}")
+    @SaCheckPermission("order:modify")
     @SaCheckLogin
     public Result<Void> modifyRepairOrder(@PathVariable int repairOrderId, @RequestBody ModifyRepairOrderDto dto)
     {
@@ -119,6 +124,7 @@ public class RepairOrderController
     // 更新单个报修单状态
     @LogAnnotation(module = "repair-orders", operator = "更新报修单状态")
     @PatchMapping("/{repairOrderId}/status")
+    @SaCheckPermission("order:update")
     @SaCheckLogin
     public Result<Void> updateRepairOrder(@PathVariable int repairOrderId, @RequestBody UpdateRepairOrderDto dto)
     {
@@ -130,6 +136,7 @@ public class RepairOrderController
     // 删除报修单
     @LogAnnotation(module = "repair-orders", operator = "删除报修单")
     @DeleteMapping("/{repairOrderId}")
+    @SaCheckPermission("order:delete")
     @SaCheckLogin
     public Result<Void> deleteRepairOrder(@PathVariable int repairOrderId)
     {

@@ -98,11 +98,13 @@ const handleRegister = async () => {
                     router.push('/login')
                 }, 3000)
             } else {
-                showMsg('注册失败！' + res.msg || '请稍后再试', 'error')
+                const errorMsg = res.msg || '请稍后再试'
+                showMsg('注册失败！' + errorMsg, 'error')
             }
         })
         .catch((err) => {
-            showMsg('注册失败！' + err.msg || err.message || '请稍后再试', 'error')
+            const errorMsg = err.msg || err.message || '请稍后再试'
+            showMsg('注册失败！' + errorMsg, 'error')
             console.log(err)
         })
 }

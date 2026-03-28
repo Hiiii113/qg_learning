@@ -1,6 +1,7 @@
 package hiiii113.controller;
 
 import cn.dev33.satoken.annotation.SaCheckLogin;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import hiiii113.dto.BindDormitoryDto;
@@ -9,6 +10,7 @@ import hiiii113.dto.UserLoginDto;
 import hiiii113.dto.UserRegisterDto;
 import hiiii113.entity.User;
 import hiiii113.logAop.LogAnnotation;
+import hiiii113.mapper.UserRoleMapper;
 import hiiii113.service.UserService;
 import hiiii113.util.Result;
 import org.springframework.web.bind.annotation.*;
@@ -20,7 +22,6 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/users")
 public class UserController
 {
-    // 单构造器自动注入
     private final UserService userService;
 
     public UserController(UserService userService)
@@ -98,7 +99,7 @@ public class UserController
     {
         // 从 Token 获取用户工号
         int userId = StpUtil.getLoginIdAsInt();
-        User user = userService.getOne(new LambdaQueryWrapper<User>().eq(User::getId, userId));
+        User user = userService.getUserInfo(userId);
         return Result.success("查询成功！", user, 200);
     }
 }

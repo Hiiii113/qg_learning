@@ -320,7 +320,7 @@ const saveAll = async () => {
 
     submitting.value = true
     try {
-        await patch(`/repair-orders/${detailData.value.id}`, {
+        await patch(`/repair-orders/${detailData.value.id}/status`, {
             status: editStatus.value,
             staffNumber: userInfo.id,
             problem: problem,

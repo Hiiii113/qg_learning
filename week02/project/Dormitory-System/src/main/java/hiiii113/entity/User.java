@@ -30,7 +30,8 @@ public class User
     @JsonIgnore
     private String password;
 
-    // 身份: 1-学生 2-维修人员
+    // 身份，该字段不在 user 表中，存在 User 实体类是为了传给前端用
+    @TableField(exist = false)
     private Integer role;
 
     // 宿舍地址

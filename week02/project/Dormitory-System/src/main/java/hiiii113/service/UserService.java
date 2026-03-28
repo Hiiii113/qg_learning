@@ -1,5 +1,6 @@
 package hiiii113.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.IService;
 import hiiii113.entity.User;
 
@@ -19,4 +20,7 @@ public interface UserService extends IService<User>
 
     // 修改密码
     void modifyPassword(Integer userId, String password);
+
+    // 获取用户信息
+    User getUserInfo(int userId);
 }

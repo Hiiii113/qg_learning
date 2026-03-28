@@ -4,11 +4,14 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import hiiii113.entity.User;
+import hiiii113.entity.UserRole;
 import hiiii113.exception.ServiceException;
 import hiiii113.mapper.UserMapper;
+import hiiii113.mapper.UserRoleMapper;
 import hiiii113.service.UserService;
 import hiiii113.util.PasswordUtil;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.regex.Pattern;
 
@@ -18,6 +21,13 @@ import java.util.regex.Pattern;
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService
 {
+    private final UserRoleMapper userRoleMapper;
+
+    // 构造器自动注入
+    UserServiceImpl(UserRoleMapper userRoleMapper)
+    {
+        this.userRoleMapper = userRoleMapper;
+    }
 
     // 登录
     @Override
@@ -50,6 +60,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     // 注册
     @Override
+    @Transactional // 开启事务，因为需要同时插入两张表
     public void register(String userNumber, String password, Integer role)
     {
         // 判空
@@ -95,11 +106,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         User newUser = new User();
         newUser.setUserNumber(userNumber);
         newUser.setPassword(PasswordUtil.encode(password));
-        newUser.setRole(role);
-
         boolean res = save(newUser);
 
-        if (!res)
+        // 在用户-角色表中插入
+        int userId = newUser.getId(); // 从刚刚保存的对象里面获取自增的 id
+        UserRole userRole = new UserRole();
+        userRole.setUserId(userId);
+        userRole.setRoleId(role);
+        int infectedRows = userRoleMapper.insert(userRole);
+
+        if (!res || infectedRows <= 0)
         {
             throw new ServiceException("注册失败！", 500);
         }
@@ -146,5 +162,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         {
             throw new ServiceException("账户异常！", 500);
         }
+    }
+
+    @Override
+    public User getUserInfo(int userId)
+    {
+        // 获取 user 实体对象
+        User user = getOne(new LambdaQueryWrapper<User>().eq(User::getId, userId));
+        // 获取用户角色
+        UserRole userRole = userRoleMapper.selectOne(new LambdaQueryWrapper<UserRole>().eq(UserRole::getUserId, userId));
+        // 设置 role
+        user.setRole(userRole.getRoleId());
+        return user;
     }
 }
