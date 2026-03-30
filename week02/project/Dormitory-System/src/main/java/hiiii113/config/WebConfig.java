@@ -10,6 +10,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WebConfig implements WebMvcConfigurer
 {
+    // 注册一个资源处理器
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry)
     {
@@ -17,8 +18,8 @@ public class WebConfig implements WebMvcConfigurer
         String path = System.getProperty("user.dir") + "/upload/";
 
         // 映射
-        registry.addResourceHandler("/upload/**")
-                .addResourceLocations("file:" + path);
+        registry.addResourceHandler("/upload/**") // 所有以 /upload 开头的路径都会被这个处理
+                .addResourceLocations("file:" + path); // 指示文件的路径
     }
 }
 

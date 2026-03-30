@@ -6,14 +6,17 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import hiiii113.entity.RepairOrder;
+import hiiii113.entity.User;
 import hiiii113.exception.ServiceException;
 import hiiii113.mapper.RepairOrderMapper;
+import hiiii113.mapper.UserMapper;
 import hiiii113.service.RepairOrderService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -23,10 +26,12 @@ import java.util.List;
 public class RepairOrderServiceImpl extends ServiceImpl<RepairOrderMapper, RepairOrder> implements RepairOrderService
 {
     private final RepairOrderMapper repairOrderMapper;
+    private final UserMapper userMapper;
 
-    public RepairOrderServiceImpl(RepairOrderMapper repairOrderMapper)
+    public RepairOrderServiceImpl(RepairOrderMapper repairOrderMapper, UserMapper userMapper)
     {
         this.repairOrderMapper = repairOrderMapper;
+        this.userMapper = userMapper;
     }
 
     // 创建报修单
@@ -39,10 +44,21 @@ public class RepairOrderServiceImpl extends ServiceImpl<RepairOrderMapper, Repai
             throw new ServiceException("用户id和问题描述不能为空！", 400);
         }
 
+        // 查找到这个用户信息并填入
+        User user = userMapper.selectById(userId);
+        if (user == null)
+        {
+            throw new ServiceException("该用户不存在！", 400);
+        }
+        String userNumber = user.getUserNumber();
+        String dormRoom = user.getDormRoom();
+
         // 新建一个报修单
         RepairOrder repairOrder = new RepairOrder();
         repairOrder.setUserId(userId);
         repairOrder.setProblem(problem);
+        repairOrder.setUserNumber(userNumber);
+        repairOrder.setDormRoom(dormRoom);
         boolean res = save(repairOrder);
 
         if (!res)
@@ -62,6 +78,13 @@ public class RepairOrderServiceImpl extends ServiceImpl<RepairOrderMapper, Repai
         if (repairOrderId == null || file.isEmpty())
         {
             throw new ServiceException("报修单id和图片不能为空！", 400);
+        }
+
+        // 看是否存在这个报修单
+        RepairOrder ro = repairOrderMapper.selectById(repairOrderId);
+        if (ro == null)
+        {
+            throw new ServiceException("报修单不存在！", 400);
         }
 
         // 生成文件名，防止重复
@@ -98,6 +121,19 @@ public class RepairOrderServiceImpl extends ServiceImpl<RepairOrderMapper, Repai
     @Override
     public void userRating(Integer repairOrderId, Integer rating)
     {
+        // 获取报修单并判断是否已完成，没完成不给评价
+        RepairOrder ro = repairOrderMapper.selectById(repairOrderId);
+        // 看订单是否存在
+        if (ro == null)
+        {
+            throw new ServiceException("报修单不存在！", 400);
+        }
+        // 看订单是否已完成
+        if (ro.getStatus() != 4)
+        {
+            throw new ServiceException("报修单未完成，不能评价！", 400);
+        }
+
         RepairOrder repairOrder = new RepairOrder();
         repairOrder.setId(repairOrderId);
         repairOrder.setRating(rating);
@@ -190,6 +226,12 @@ public class RepairOrderServiceImpl extends ServiceImpl<RepairOrderMapper, Repai
             throw new ServiceException("报修单id和问题描述不能为空！", 400);
         }
 
+        RepairOrder ro = repairOrderMapper.selectById(repairOrderId);
+        if (ro == null)
+        {
+            throw new ServiceException("报修单不存在！", 400);
+        }
+
         RepairOrder repairOrder = new RepairOrder();
         repairOrder.setId(repairOrderId);
         repairOrder.setProblem(problem);
@@ -209,6 +251,12 @@ public class RepairOrderServiceImpl extends ServiceImpl<RepairOrderMapper, Repai
         if (repairOrderId == null || status == null || staffNumber == null)
         {
             throw new ServiceException("报修单id和状态和员工id不能为空！", 400);
+        }
+
+        RepairOrder ro = repairOrderMapper.selectById(repairOrderId);
+        if (ro == null)
+        {
+            throw new ServiceException("报修单不存在！", 400);
         }
 
         boolean res = update(new LambdaUpdateWrapper<RepairOrder>()
@@ -232,10 +280,17 @@ public class RepairOrderServiceImpl extends ServiceImpl<RepairOrderMapper, Repai
             throw new ServiceException("报修单id和状态和员工id不能为空！", 400);
         }
 
+        RepairOrder ro = repairOrderMapper.selectById(repairOrderId);
+        if (ro == null)
+        {
+            throw new ServiceException("报修单不存在！", 400);
+        }
+
         LambdaUpdateWrapper<RepairOrder> wrapper = new LambdaUpdateWrapper<>();
         wrapper.eq(RepairOrder::getId, repairOrderId)
                 .set(RepairOrder::getStatus, status)
-                .set(RepairOrder::getStaffNumber, staffNumber);
+                .set(RepairOrder::getStaffNumber, staffNumber)
+                .set(RepairOrder::getCompletedTime, LocalDateTime.now());
 
         if (problem != null && !problem.isEmpty())
         {
@@ -260,6 +315,12 @@ public class RepairOrderServiceImpl extends ServiceImpl<RepairOrderMapper, Repai
             throw new ServiceException("报修单id不能为空！", 400);
         }
 
+        RepairOrder ro = repairOrderMapper.selectById(repairOrderId);
+        if (ro == null)
+        {
+            throw new ServiceException("报修单不存在！", 400);
+        }
+
         boolean res = removeById(repairOrderId);
 
         if (!res)
@@ -276,6 +337,12 @@ public class RepairOrderServiceImpl extends ServiceImpl<RepairOrderMapper, Repai
         if (repairOrderId == null)
         {
             throw new ServiceException("报修单id不能为空！", 400);
+        }
+
+        RepairOrder ro = repairOrderMapper.selectById(repairOrderId);
+        if (ro == null)
+        {
+            throw new ServiceException("报修单不存在！", 400);
         }
 
         boolean res = update(new LambdaUpdateWrapper<RepairOrder>()

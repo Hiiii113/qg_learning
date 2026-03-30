@@ -7,6 +7,9 @@ import lombok.Data;
 @TableName("sys_user_role")
 public class UserRole
 {
+    // 用户 id
     private Integer userId;
+
+    // 角色 id
     private Integer roleId;
 }

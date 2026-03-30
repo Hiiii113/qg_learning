@@ -46,6 +46,7 @@
             <div v-if="currentView === 'create'" class="create-view">
                 <div class="form-item">
                     <label>问题描述</label>
+                    <!-- 文本输入框 -->
                     <textarea
                         v-model="repairProblem"
                         placeholder="请描述清楚：位置/现象/是否紧急"
@@ -66,6 +67,7 @@
                     </div>
                 </div>
                 <div class="actions">
+                    <!-- 当正在提交或者没有内容时按钮禁用 -->
                     <button
                         class="btn-primary"
                         @click="submitRepair"
@@ -80,11 +82,14 @@
             <!-- 我的报修单 -->
             <div v-if="currentView === 'repairs'" class="repairs-view">
                 <div class="toolbar">
+                    <!-- 正在加载时不可选中 -->
                     <button class="btn-primary" @click="loadMyRepairs" :disabled="loading">
                         {{ loading ? '加载中...' : '↻ 刷新' }}
                     </button>
                 </div>
+                <!-- 没有保修记录时显示 -->
                 <div v-if="repairs.length === 0" class="empty">暂无报修记录</div>
+                <!-- 否则显示 -->
                 <table v-else class="table">
                     <thead>
                         <tr>
@@ -128,11 +133,19 @@
 
                 <!-- 分页 -->
                 <div class="pagination" v-if="totalPages > 0">
-                    <button class="btn-page" :disabled="currentPage <= 1" @click="changePage(currentPage - 1)">
+                    <button
+                        class="btn-page"
+                        :disabled="currentPage <= 1"
+                        @click="changePage(currentPage - 1)"
+                    >
                         上一页
                     </button>
                     <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
-                    <button class="btn-page" :disabled="currentPage >= totalPages" @click="changePage(currentPage + 1)">
+                    <button
+                        class="btn-page"
+                        :disabled="currentPage >= totalPages"
+                        @click="changePage(currentPage + 1)"
+                    >
                         下一页
                     </button>
                 </div>
@@ -194,6 +207,7 @@
 
                         <div class="form-item">
                             <label>问题描述</label>
+                            <!-- 文本输入框，已完成时不可选中 -->
                             <textarea
                                 v-model="editProblem"
                                 rows="3"
@@ -259,6 +273,7 @@
                 </div>
             </div>
 
+            <!-- 图片预览 -->
             <div v-if="imageVisible" class="modal-mask" @click.self="closeImage">
                 <div class="image-modal">
                     <img :src="imageSrc" class="preview-img" />
@@ -283,40 +298,42 @@ import { useRouter } from 'vue-router'
 import { get, post, put } from '@/utils/request.js'
 
 const router = useRouter()
-const userInfo = ref(JSON.parse(localStorage.getItem('userInfo') || '{}'))
+const userInfo = ref(JSON.parse(localStorage.getItem('userInfo') || '{}')) // 获取用户信息
 
-const currentView = ref('repairs')
-const message = ref('')
-const messageType = ref('success')
-const loading = ref(false)
-const submitting = ref(false)
+const currentView = ref('repairs') // 当前模式
+const message = ref('') // 提示信息
+const messageType = ref('success') // 提示信息类型(success or error)
+const loading = ref(false) // 是否正在加载
+const submitting = ref(false) // 是否正在提交
 
-const dormRoom = ref('')
-const repairProblem = ref('')
-const imageFile = ref(null)
-const imagePreview = ref('')
-const fileInputRef = ref(null)
-const repairs = ref([])
-const newPassword = ref('')
+const dormRoom = ref('') // 输入的宿舍地址
+const repairProblem = ref('') // 输入的报修单内容
+const imageFile = ref(null) // 当前的 image
+const imagePreview = ref('') // 当前的预览的图片
+const fileInputRef = ref(null) // 上传图片的 DOM 元素
+const repairs = ref([]) // 报修单列表
+const newPassword = ref('') // 输入的新密码
 
-const currentPage = ref(1)
-const pageSize = ref(10)
-const totalPages = ref(0)
-const totalCount = ref(0)
+const currentPage = ref(1) // 当前的页码(默认1)
+const pageSize = ref(10) // 当前页面大小(默认10)
+const totalPages = ref(0) // 总共的页数大小
+const totalCount = ref(0) // 总共多少数据
 
-const detailVisible = ref(false)
-const detailData = ref(null)
-const editProblem = ref('')
-const detailImageFile = ref(null)
-const detailImagePreview = ref('')
-const detailFileRef = ref(null)
+const detailVisible = ref(false) // 预览
+const detailData = ref(null) // 报修单详情
+const editProblem = ref('') // 编辑 problem
+const detailImageFile = ref(null) // 详情里面的图片
+const detailImagePreview = ref('') // 详情里面的预览图片
+const detailFileRef = ref(null) // 详情里面的上传图片的 DOM 元素
 
-const imageVisible = ref(false)
-const imageSrc = ref('')
+const imageVisible = ref(false) //
+const imageSrc = ref('') //
 
+// 映射
 const statusMap = { 1: '待处理', 2: '处理中', 3: '已完成', 4: '已取消' }
 const statusText = (s) => statusMap[s] || '未知'
 
+// 提示信息
 const showMessage = (text, type = 'success') => {
     message.value = text
     messageType.value = type
@@ -325,15 +342,17 @@ const showMessage = (text, type = 'success') => {
     }, 3000)
 }
 
+// 获取照片地址
 const getImageUrl = (url) =>
     url?.startsWith('http') ? url : `http://localhost:8081/${url?.replace(/^\/+/, '')}`
 
+// 绑定宿舍
 const bindDorm = () => {
     if (!dormRoom.value.trim()) {
         showMessage('请输入宿舍号', 'error')
         return
     }
-    submitting.value = true
+    submitting.value = true // 正在提交
     post(`/users/dormitories`, { dormRoom: dormRoom.value })
         .then(() => {
             showMessage('绑定成功')
@@ -342,10 +361,11 @@ const bindDorm = () => {
         })
         .catch(() => showMessage('绑定失败', 'error'))
         .finally(() => {
-            submitting.value = false
+            submitting.value = false // 结束提交
         })
 }
 
+// 刷新用户信息
 const refreshUserInfo = () => {
     get('/users/me')
         .then((res) => {
@@ -355,6 +375,7 @@ const refreshUserInfo = () => {
         .catch(() => {})
 }
 
+// 图片更新
 const handleImageChange = (e) => {
     const file = e.target.files?.[0]
     if (!file) {
@@ -376,26 +397,28 @@ const handleImageChange = (e) => {
     e.target.value = ''
 }
 
+// 清除 image
 const clearImage = () => {
     imageFile.value = null
     imagePreview.value = ''
     if (fileInputRef.value) fileInputRef.value.value = ''
 }
 
+// 清除准备提交的报修单
 const clearForm = () => {
     repairProblem.value = ''
     clearImage()
 }
 
+// 提交报修单
 const submitRepair = async () => {
     if (!repairProblem.value.trim()) {
         showMessage('请输入问题描述', 'error')
         return
     }
-    submitting.value = true
+    submitting.value = true // 开始提交
     try {
         const res = await post('/repair-orders', {
-            userId: userInfo.value.id,
             problem: repairProblem.value,
         })
         const id = res.data
@@ -406,19 +429,20 @@ const submitRepair = async () => {
             await post('/repair-orders/upload', formData)
         }
         showMessage('提交成功')
-        clearForm()
-        loadMyRepairs()
+        clearForm() // 清除
+        loadMyRepairs() // 重新加载
     } catch (err) {
         showMessage('提交失败！' + err.msg, 'error')
     } finally {
-        submitting.value = false
+        submitting.value = false // 结束提交
     }
 }
 
+// 加载报修单
 const loadMyRepairs = () => {
     currentView.value = 'repairs'
     loading.value = true
-    get(`/repair-orders/user/${userInfo.value.id}/repair-orders?page=${currentPage.value}&size=${pageSize.value}`)
+    get(`/repair-orders/user/repair-orders?page=${currentPage.value}&size=${pageSize.value}`)
         .then((res) => {
             const pageData = res.data
             repairs.value = pageData.records || []
@@ -431,12 +455,14 @@ const loadMyRepairs = () => {
         })
 }
 
+// 更换 page
 const changePage = (page) => {
     if (page < 1 || page > totalPages.value) return
     currentPage.value = page
     loadMyRepairs()
 }
 
+// 查看详情
 const openDetail = (id) => {
     get(`/repair-orders/${id}`)
         .then((res) => {
@@ -448,6 +474,7 @@ const openDetail = (id) => {
         .catch(() => showMessage('加载失败', 'error'))
 }
 
+// 关闭详情页面
 const closeDetail = () => {
     detailVisible.value = false
     detailData.value = null
@@ -455,6 +482,7 @@ const closeDetail = () => {
     clearDetailImage()
 }
 
+// 详情页面更换图片
 const handleDetailImageChange = (e) => {
     const file = e.target.files?.[0]
     if (!file) {
@@ -476,18 +504,20 @@ const handleDetailImageChange = (e) => {
     e.target.value = ''
 }
 
+// 清空详情页面的图片
 const clearDetailImage = () => {
     detailImageFile.value = null
     detailImagePreview.value = ''
     if (detailFileRef.value) detailFileRef.value.value = ''
 }
 
+// 保存详情页面的修改
 const saveChanges = async () => {
     if (!detailData.value || !editProblem.value.trim()) {
         showMessage('问题描述不能为空', 'error')
         return
     }
-    submitting.value = true
+    submitting.value = true // 开始提交
     try {
         await put(`/repair-orders/${detailData.value.id}`, { problem: editProblem.value })
         if (detailImageFile.value) {
@@ -506,6 +536,7 @@ const saveChanges = async () => {
     }
 }
 
+// 取消报修单
 const cancelOrder = async () => {
     if (!detailData.value || !confirm('确定要取消此报修单吗？')) return
     submitting.value = true
@@ -521,6 +552,7 @@ const cancelOrder = async () => {
     }
 }
 
+// 提交评分
 const submitRating = async (rating) => {
     if (!detailData.value?.id || detailData.value.rating > 0) return
     submitting.value = true
@@ -534,16 +566,17 @@ const submitRating = async (rating) => {
     } catch (err) {
         showMessage('评价失败！' + err.msg, 'error')
     } finally {
-        submitting.value = false
+        submitting.value = false // 结束提交
     }
 }
 
+// 更新密码
 const updatePassword = () => {
     if (!newPassword.value) {
         showMessage('请输入新密码', 'error')
         return
     }
-    submitting.value = true
+    submitting.value = true // 开始提交
     put(`/users/password`, { password: newPassword.value })
         .then(() => {
             showMessage('修改成功')
@@ -551,28 +584,33 @@ const updatePassword = () => {
         })
         .catch(() => showMessage('修改失败', 'error'))
         .finally(() => {
-            submitting.value = false
+            submitting.value = false // 结束提交
         })
 }
 
+// 登出
 const logout = () => {
-    localStorage.removeItem('userInfo')
-    get('/users/logout').finally(() => router.push('/login'))
+    localStorage.removeItem('userInfo') // 清空
+    get('/users/logout').finally(() => router.push('/login')) // 注销 Token
 }
 
+// 预览
 const previewImage = (url) => {
     imageSrc.value = getImageUrl(url)
-    imageVisible.value = true
-}
-const closeImage = () => {
-    imageVisible.value = false
+    imageVisible.value = true // 预览界面可见
 }
 
+// 关闭 image
+const closeImage = () => {
+    imageVisible.value = false // 预览界面不可见
+}
+
+// 开始时加载
 onMounted(() => {
     loadMyRepairs()
     if (!userInfo.value.dormRoom) {
         showMessage('请先绑定宿舍', 'error')
-        currentView.value = 'bind'
+        currentView.value = 'bind' // 跳转到绑定页面
     }
 })
 </script>

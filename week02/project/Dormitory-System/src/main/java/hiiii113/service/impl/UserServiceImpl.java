@@ -31,7 +31,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     // 登录
     @Override
-    public User login(String userNumber, String password)
+    public void login(String userNumber, String password)
     {
         // 判空
         if (userNumber == null || password == null)
@@ -50,11 +50,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (!PasswordUtil.matches(password, user.getPassword()))
         {
             throw new ServiceException("用户名或密码错误！", 401);
-        }
-        else
-        {
-            // 给前端传相关的数据
-            return user;
         }
     }
 

@@ -1,7 +1,6 @@
 package hiiii113.controller;
 
 import cn.dev33.satoken.annotation.SaCheckLogin;
-import cn.dev33.satoken.annotation.SaCheckPermission;
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import hiiii113.dto.BindDormitoryDto;
@@ -9,25 +8,21 @@ import hiiii113.dto.ModifyPasswordDto;
 import hiiii113.dto.UserLoginDto;
 import hiiii113.dto.UserRegisterDto;
 import hiiii113.entity.User;
-import hiiii113.logAop.LogAnnotation;
-import hiiii113.mapper.UserRoleMapper;
+import hiiii113.log.LogAnnotation;
 import hiiii113.service.UserService;
 import hiiii113.util.Result;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * users 的接口
+ * users 的 Controller
  */
 @RestController
 @RequestMapping("/users")
+@RequiredArgsConstructor
 public class UserController
 {
     private final UserService userService;
-
-    public UserController(UserService userService)
-    {
-        this.userService = userService;
-    }
 
     // 登录
     @LogAnnotation(module = "users", operator = "用户登录")

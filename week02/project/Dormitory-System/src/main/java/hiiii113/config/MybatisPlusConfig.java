@@ -6,9 +6,13 @@ import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerIntercept
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Mybatis Plus 的配置类
+ */
 @Configuration
 public class MybatisPlusConfig
 {
+    // 加载分页插件
     @Bean // 实际上是使用一个拦截器实现逻辑
     public MybatisPlusInterceptor mybatisPlusInterceptor()
     {

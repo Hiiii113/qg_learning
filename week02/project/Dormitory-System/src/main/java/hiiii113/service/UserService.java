@@ -1,6 +1,5 @@
 package hiiii113.service;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.IService;
 import hiiii113.entity.User;
 
@@ -10,7 +9,7 @@ import hiiii113.entity.User;
 public interface UserService extends IService<User>
 {
     // 登录
-    User login(String userNumber, String password);
+    void login(String userNumber, String password);
 
     // 注册
     void register(String userNumber, String password, Integer role);

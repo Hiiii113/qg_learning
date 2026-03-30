@@ -46,7 +46,7 @@ public class RepairOrder
     private int rating;
 
     // 完成时间
-    private Date completedTime;
+    private LocalDateTime completedTime;
 
     // 创建时间
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

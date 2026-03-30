@@ -14,6 +14,9 @@
                 >
                     修改密码
                 </button>
+                <button :class="{ active: currentView === 'logs' }" @click="switchView('logs')">
+                    系统日志
+                </button>
             </div>
 
             <!-- 消息 -->
@@ -26,7 +29,14 @@
                         <span v-if="loading">加载中...</span>
                         <span v-else>↻ 刷新</span>
                     </button>
-                    <select v-model="filterStatus" @change="currentPage = 1; loadRepairs()" class="filter-select">
+                    <select
+                        v-model="filterStatus"
+                        @change="
+                            currentPage = 1
+                            loadRepairs()
+                        "
+                        class="filter-select"
+                    >
                         <option :value="0">全部状态</option>
                         <option :value="1">待处理</option>
                         <option :value="2">处理中</option>
@@ -81,11 +91,19 @@
 
                 <!-- 分页 -->
                 <div class="pagination" v-if="totalPages > 0">
-                    <button class="btn-page" :disabled="currentPage <= 1" @click="changePage(currentPage - 1)">
+                    <button
+                        class="btn-page"
+                        :disabled="currentPage <= 1"
+                        @click="changePage(currentPage - 1)"
+                    >
                         上一页
                     </button>
                     <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
-                    <button class="btn-page" :disabled="currentPage >= totalPages" @click="changePage(currentPage + 1)">
+                    <button
+                        class="btn-page"
+                        :disabled="currentPage >= totalPages"
+                        @click="changePage(currentPage + 1)"
+                    >
                         下一页
                     </button>
                 </div>
@@ -107,6 +125,66 @@
                         保存
                     </button>
                     <button class="btn-ghost" @click="newPassword = ''">清空</button>
+                </div>
+            </div>
+
+            <!-- 系统日志 -->
+            <div v-if="currentView === 'logs'" class="logs-view">
+                <div class="toolbar">
+                    <button class="btn-primary" @click="loadLogs" :disabled="logsLoading">
+                        <span v-if="logsLoading">加载中...</span>
+                        <span v-else>↻ 刷新</span>
+                    </button>
+                </div>
+
+                <div v-if="logs.length === 0" class="empty">暂无日志</div>
+                <table v-else class="table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>操作用户</th>
+                            <th>模块</th>
+                            <th>操作</th>
+                            <th>耗时</th>
+                            <th>IP</th>
+                            <th>操作时间</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="item in logs" :key="item.id">
+                            <td>{{ item.id }}</td>
+                            <td>{{ item.userNumber }}</td>
+                            <td>{{ item.module }}</td>
+                            <td>{{ item.operator }}</td>
+                            <td>{{ item.costTime }}ms</td>
+                            <td>{{ item.clientIp }}</td>
+                            <td>{{ item.operationTime }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="pagination">
+                    <button
+                        class="btn-page"
+                        @click="
+                            logsPage--
+                            loadLogs()
+                        "
+                        :disabled="logsPage <= 1"
+                    >
+                        上一页
+                    </button>
+                    <span class="page-info">第 {{ logsPage }} / {{ logsPages }} 页</span>
+                    <button
+                        class="btn-page"
+                        @click="
+                            logsPage++
+                            loadLogs()
+                        "
+                        :disabled="logsPage >= logsPages"
+                    >
+                        下一页
+                    </button>
                 </div>
             </div>
 
@@ -214,34 +292,41 @@ import { useRouter } from 'vue-router'
 import { del, get, patch, put } from '@/utils/request.js'
 
 const router = useRouter()
-const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}') // 用户信息
 
-const currentView = ref('list')
-const message = ref('')
-const messageType = ref('success')
-const loading = ref(false)
-const submitting = ref(false)
+const currentView = ref('list') // 当前模块
+const message = ref('') // 提示信息
+const messageType = ref('success') // 提示信息类型
+const loading = ref(false) // 正在加载
+const submitting = ref(false) // 正在提交
 
-const repairs = ref([])
-const filterStatus = ref(0)
-const newPassword = ref('')
+const repairs = ref([]) // 报修单列表
+const filterStatus = ref(0) // 根据状态筛选
+const newPassword = ref('') // 新的密码
 
-const currentPage = ref(1)
-const pageSize = ref(10)
-const totalPages = ref(0)
-const totalCount = ref(0)
+const logs = ref([]) // 日志列表
+const logsLoading = ref(false) // 日志正在加载
+const logsPage = ref(1) // 当前页码(默认1)
+const logsSize = ref(10) // 当前页面大小(默认10)
+const logsPages = ref(0) // 总共的页面大小
 
-const detailVisible = ref(false)
-const detailData = ref(null)
-const editStatus = ref(1)
-const editProblem = ref('')
+const currentPage = ref(1) // 当前页码
+const pageSize = ref(10) // 大小
+const totalPages = ref(0) // 总共页码
+const totalCount = ref(0) // 总共的数据大小
 
-const imageVisible = ref(false)
-const imageSrc = ref('')
+const detailVisible = ref(false) // 详情是否显示
+const detailData = ref(null) // 详情页面数据
+const editStatus = ref(1) // 编辑状态
+const editProblem = ref('') // 编辑问题
+
+const imageVisible = ref(false) // 预览图片是否显示
+const imageSrc = ref('') // 预览图片地址
 
 const statusMap = { 1: '待处理', 2: '处理中', 3: '已完成', 4: '已取消' }
 const statusText = (status) => statusMap[status] || '未知'
 
+// 提示信息
 const showMessage = (text, type = 'success') => {
     message.value = text
     messageType.value = type
@@ -250,16 +335,37 @@ const showMessage = (text, type = 'success') => {
     }, 3000)
 }
 
+// 获取 image
 const getImageUrl = (url) =>
     url?.startsWith('http') ? url : `http://localhost:8081/${url?.replace(/^\/+/, '')}`
 
+// 更换视图
 const switchView = (view) => {
     currentView.value = view
+    if (view === 'logs') {
+        loadLogs()
+    }
+}
+
+// 加载日志
+const loadLogs = () => {
+    logsLoading.value = true // 开始加载
+    get(`/logs?page=${logsPage.value}&size=${logsSize.value}`)
+        .then((res) => {
+            const pageData = res.data
+            logs.value = pageData.records || []
+            logsPages.value = pageData.pages || 0
+        })
+        .catch(() => showMessage('加载日志失败', 'error'))
+        .finally(() => {
+            logsLoading.value = false // 结束加载
+        })
 }
 
 const loadRepairs = () => {
-    loading.value = true
+    loading.value = true // 开始加载
     let api = `/repair-orders?page=${currentPage.value}&size=${pageSize.value}`
+    // 是否选择了，选择了才加上这个 status
     if (filterStatus.value !== 0) {
         api += `&status=${filterStatus.value}`
     }
@@ -272,16 +378,18 @@ const loadRepairs = () => {
         })
         .catch(() => showMessage('加载失败', 'error'))
         .finally(() => {
-            loading.value = false
+            loading.value = false // 结束加载
         })
 }
 
+// 更新页码
 const changePage = (page) => {
     if (page < 1 || page > totalPages.value) return
     currentPage.value = page
     loadRepairs()
 }
 
+// 打开详情页面
 const openDetail = (id) => {
     if (!id) return
     get(`/repair-orders/${id}`)
@@ -294,6 +402,7 @@ const openDetail = (id) => {
         .catch(() => showMessage('加载详情失败', 'error'))
 }
 
+// 清空并关闭
 const closeDetail = () => {
     detailVisible.value = false
     detailData.value = null
@@ -301,15 +410,18 @@ const closeDetail = () => {
     editProblem.value = ''
 }
 
+// 照片预览
 const previewImage = (url) => {
     imageSrc.value = getImageUrl(url)
     imageVisible.value = true
 }
 
+// 关闭预览
 const closeImage = () => {
     imageVisible.value = false
 }
 
+// 保存所有
 const saveAll = async () => {
     if (!detailData.value) return
     const problem = editProblem.value.trim()
@@ -335,6 +447,7 @@ const saveAll = async () => {
     }
 }
 
+// 取消报修单
 const cancelOrder = async () => {
     if (!detailData.value || !confirm('确定要取消此报修单吗？')) return
     submitting.value = true
@@ -350,6 +463,7 @@ const cancelOrder = async () => {
     }
 }
 
+// 删除报修单
 const deleteOrder = async () => {
     if (!detailData.value || !confirm('确定要删除此报修单吗？此操作不可恢复！')) return
     submitting.value = true
@@ -365,6 +479,7 @@ const deleteOrder = async () => {
     }
 }
 
+// 更新密码
 const updatePassword = () => {
     if (!newPassword.value) {
         showMessage('请输入新密码', 'error')
@@ -382,6 +497,7 @@ const updatePassword = () => {
         })
 }
 
+// 登出
 const logout = () => {
     localStorage.removeItem('userInfo')
     get('/users/logout').finally(() => router.push('/login'))
@@ -797,5 +913,36 @@ h2 {
 .page-info {
     font-size: 13px;
     color: #606266;
+}
+
+.logs-view {
+    margin-top: 16px;
+}
+.logs-view .table th:nth-child(1),
+.logs-view .table td:nth-child(1) {
+    width: 50px;
+}
+.logs-view .table th:nth-child(2),
+.logs-view .table td:nth-child(2) {
+    width: 100px;
+}
+.logs-view .table th:nth-child(3),
+.logs-view .table td:nth-child(3) {
+    width: 100px;
+}
+.logs-view .table th:nth-child(4),
+.logs-view .table td:nth-child(4) {
+    width: 120px;
+}
+.logs-view .table th:nth-child(5),
+.logs-view .table td:nth-child(5) {
+    width: 80px;
+}
+.logs-view .table th:nth-child(6),
+.logs-view .table td:nth-child(6) {
+    width: 140px;
+}
+.logs-view .table tr {
+    cursor: default;
 }
 </style>

@@ -73,7 +73,8 @@ VALUES (1, '查看个人报修单', 'order:listMe'),
        (3, '创建报修单', 'order:add'),
        (4, '修改报修单', 'order:modify'),
        (5, '更新报修单', 'order:update'),
-       (6, '删除报修单', 'order:delete');
+       (6, '删除报修单', 'order:delete'),
+       (7, '获取系统日志', 'log:list');
 
 -- 关联角色与权限 (管理员)
 INSERT INTO sys_role_permission (role_id, permission_id)
@@ -82,7 +83,8 @@ VALUES (2, 1),
        (2, 3),
        (2, 4),
        (2, 5),
-       (2, 6);
+       (2, 6),
+       (2, 7);
 -- 管理员(2)拥有所有权限
 
 -- 关联角色与权限(普通用户)
@@ -90,3 +92,23 @@ INSERT INTO sys_role_permission (role_id, permission_id)
 VALUES (1, 1),
        (1, 3),
        (1, 4);
+
+-- 日志表
+CREATE TABLE `sys_operation_log`
+(
+    id             int          NOT NULL AUTO_INCREMENT COMMENT '日志ID（自增主键）',
+    user_number    varchar(50)  NOT NULL COMMENT '操作用户',
+    operation_time datetime     NOT NULL COMMENT '操作时间',
+    module         varchar(100) NOT NULL COMMENT '操作模块（如：用户管理）',
+    operator       varchar(255)          DEFAULT NULL COMMENT '操作描述（如：新增用户）',
+    method         varchar(255) NOT NULL COMMENT '操作方法全路径',
+    params         text COMMENT '方法参数（JSON格式）',
+    result         text COMMENT '操作结果（成功/失败，JSON格式）',
+    exception      text COMMENT '异常信息（失败时记录）',
+    cost_time      bigint                DEFAULT NULL COMMENT '操作耗时（毫秒）',
+    client_ip      varchar(50)           DEFAULT NULL COMMENT '客户端IP',
+    create_time    datetime     not null default current_timestamp comment '创建时间',
+    PRIMARY KEY (id),
+    KEY idx_operation_time (operation_time) COMMENT '按操作时间查询索引',
+    KEY idx_username (user_number) COMMENT '按用户查询索引'
+) COMMENT ='系统操作日志表';

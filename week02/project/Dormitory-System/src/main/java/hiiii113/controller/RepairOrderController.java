@@ -9,9 +9,10 @@ import hiiii113.dto.ModifyRepairOrderDto;
 import hiiii113.dto.UpdateRepairOrderDto;
 import hiiii113.dto.UserRatingDto;
 import hiiii113.entity.RepairOrder;
-import hiiii113.logAop.LogAnnotation;
+import hiiii113.log.LogAnnotation;
 import hiiii113.service.RepairOrderService;
 import hiiii113.util.Result;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -19,23 +20,19 @@ import java.io.IOException;
 
 @RestController
 @RequestMapping("/repair-orders")
+@RequiredArgsConstructor
 public class RepairOrderController
 {
     // 单构造器自动注入
     private final RepairOrderService repairOrderService;
 
-    public RepairOrderController(RepairOrderService repairOrderService)
-    {
-        this.repairOrderService = repairOrderService;
-    }
-
     // 创建报修单
     @LogAnnotation(module = "repair-orders", operator = "创建报修单")
     @PostMapping
     @SaCheckPermission("order:add")
-    @SaCheckLogin
     public Result<Integer> createRepairOrder(@RequestBody CreateRepairOrderDto dto)
     {
+        // 从 Token 获取 userId
         int userId = StpUtil.getLoginIdAsInt();
         Integer repairOrderId = repairOrderService.createRepairOrder(userId, dto.getProblem());
         return Result.success("提交成功！", repairOrderId, 201);
@@ -44,7 +41,6 @@ public class RepairOrderController
     // 提交报修单图片
     @LogAnnotation(module = "repair-orders", operator = "提交报修单图片")
     @PostMapping("/upload")
-    @SaCheckLogin
     public Result<String> uploadImage(@RequestParam("file") MultipartFile file,
                                       @RequestParam("id") Integer repairOrderId) throws IOException
     {
@@ -58,7 +54,6 @@ public class RepairOrderController
     // 用户评价
     @LogAnnotation(module = "repair-orders", operator = "用户评价")
     @PostMapping("/{repairOrderId}/rating")
-    @SaCheckLogin
     public Result<Void> rating(@PathVariable int repairOrderId, @RequestBody UserRatingDto dto)
     {
         repairOrderService.userRating(repairOrderId, dto.getRating());
@@ -67,13 +62,13 @@ public class RepairOrderController
 
     // 查看单个用户报修单（分页）
     @LogAnnotation(module = "repair-orders", operator = "查看单个用户报修单")
-    @GetMapping("/user/{userId}/repair-orders")
+    @GetMapping("/user/repair-orders")
     @SaCheckPermission("order:listMe")
-    @SaCheckLogin
-    public Result<IPage<RepairOrder>> getUserRepairOrders(@PathVariable int userId,
-                                                          @RequestParam(defaultValue = "1") Integer page,
+    public Result<IPage<RepairOrder>> getUserRepairOrders(@RequestParam(defaultValue = "1") Integer page,
                                                           @RequestParam(defaultValue = "10") Integer size)
     {
+        // 从 Token 获取 userId
+        int userId = StpUtil.getLoginIdAsInt();
         IPage<RepairOrder> res = repairOrderService.getUserRepairOrderByPage(userId, page, size);
         return Result.success("查询成功！", res, 200);
     }
@@ -82,12 +77,12 @@ public class RepairOrderController
     @LogAnnotation(module = "repair-orders", operator = "查看报修单列表")
     @GetMapping
     @SaCheckPermission("order:listAll")
-    @SaCheckLogin
     public Result<IPage<RepairOrder>> getRepairOrders(@RequestParam(defaultValue = "1") Integer page, // 默认第一页
                                                       @RequestParam(defaultValue = "10") Integer size, // 默认一页10条
                                                       @RequestParam(required = false) Integer status)
     {
         IPage<RepairOrder> res = null;
+        // 根据 status 是否存在判断是否需要根据状态获取 repair-orders
         if (status != null)
         {
             res = repairOrderService.getRepairOrderByStatus(page, size, status);
@@ -102,7 +97,6 @@ public class RepairOrderController
     // 查看单个报修单
     @LogAnnotation(module = "repair-orders", operator = "查看单个报修单")
     @GetMapping("/{repairOrderId}")
-    @SaCheckLogin
     public Result<RepairOrder> getRepairOrderInfo(@PathVariable int repairOrderId)
     {
         RepairOrder res = repairOrderService.getRepairOrderInfo(repairOrderId);
@@ -113,7 +107,6 @@ public class RepairOrderController
     @LogAnnotation(module = "repair-orders", operator = "修改单个报修单")
     @PutMapping("/{repairOrderId}")
     @SaCheckPermission("order:modify")
-    @SaCheckLogin
     public Result<Void> modifyRepairOrder(@PathVariable int repairOrderId, @RequestBody ModifyRepairOrderDto dto)
     {
         repairOrderService.modifyRepairOrder(repairOrderId, dto.getProblem());
@@ -125,7 +118,6 @@ public class RepairOrderController
     @LogAnnotation(module = "repair-orders", operator = "更新报修单状态")
     @PatchMapping("/{repairOrderId}/status")
     @SaCheckPermission("order:update")
-    @SaCheckLogin
     public Result<Void> updateRepairOrder(@PathVariable int repairOrderId, @RequestBody UpdateRepairOrderDto dto)
     {
         repairOrderService.updateRepairOrder(repairOrderId, dto.getStatus(), dto.getStaffNumber(), dto.getProblem());
@@ -137,7 +129,6 @@ public class RepairOrderController
     @LogAnnotation(module = "repair-orders", operator = "删除报修单")
     @DeleteMapping("/{repairOrderId}")
     @SaCheckPermission("order:delete")
-    @SaCheckLogin
     public Result<Void> deleteRepairOrder(@PathVariable int repairOrderId)
     {
         repairOrderService.deleteRepairOrder(repairOrderId);
@@ -148,7 +139,6 @@ public class RepairOrderController
     // 取消报修单
     @LogAnnotation(module = "repair-orders", operator = "取消报修单")
     @PutMapping("/{repairOrderId}/cancel")
-    @SaCheckLogin
     public Result<Void> cancelRepairOrder(@PathVariable int repairOrderId)
     {
         repairOrderService.cancelRepairOrder(repairOrderId);
