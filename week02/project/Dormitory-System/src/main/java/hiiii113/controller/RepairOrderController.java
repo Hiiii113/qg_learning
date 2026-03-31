@@ -1,5 +1,6 @@
 package hiiii113.controller;
 
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -20,6 +21,7 @@ import java.io.IOException;
 @RestController
 @RequestMapping("/repair-orders")
 @RequiredArgsConstructor
+@SaCheckLogin
 public class RepairOrderController
 {
     // 单构造器自动注入

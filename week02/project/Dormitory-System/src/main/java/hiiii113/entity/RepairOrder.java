@@ -43,7 +43,7 @@ public class RepairOrder
     private Integer staffNumber;
 
     // 用户评价
-    private int rating;
+    private Integer rating;
 
     // 完成时间
     private LocalDateTime completedTime;

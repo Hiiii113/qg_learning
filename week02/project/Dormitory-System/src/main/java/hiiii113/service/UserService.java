@@ -9,7 +9,7 @@ import hiiii113.entity.User;
 public interface UserService extends IService<User>
 {
     // 登录
-    void login(String userNumber, String password);
+    User login(String userNumber, String password);
 
     // 注册
     void register(String userNumber, String password, Integer role);

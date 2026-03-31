@@ -31,7 +31,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     // 登录
     @Override
-    public void login(String userNumber, String password)
+    public User login(String userNumber, String password)
     {
         // 判空
         if (userNumber == null || password == null)
@@ -51,6 +51,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         {
             throw new ServiceException("用户名或密码错误！", ServiceException.CODE_BAD_REQUEST);
         }
+
+        return user;
     }
 
     // 注册

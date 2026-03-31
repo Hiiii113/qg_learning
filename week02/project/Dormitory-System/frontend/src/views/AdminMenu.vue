@@ -933,7 +933,22 @@ h2 {
 .logs-view .table td:nth-child(6) {
     width: 140px;
 }
+.logs-view .table th:nth-child(7),
+.logs-view .table td:nth-child(7) {
+    width: 180px;
+}
 .logs-view .table tr {
     cursor: default;
+}
+.logs-view .table td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 200px;
+}
+.logs-view .table td:hover {
+    text-overflow: unset;
+    white-space: normal;
+    word-break: break-all;
 }
 </style>

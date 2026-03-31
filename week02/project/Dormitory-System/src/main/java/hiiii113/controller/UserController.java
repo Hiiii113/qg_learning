@@ -30,9 +30,8 @@ public class UserController
     public Result<String> login(@RequestBody UserLoginDto dto)
     {
         // 调用 Sa-Token 登录功能
-        userService.login(dto.getUserNumber(), dto.getPassword());
-        // 根据 userNumber 获取 userId
-        User user = userService.getOne(new LambdaQueryWrapper<User>().eq(User::getUserNumber, dto.getUserNumber()));
+        User user = userService.login(dto.getUserNumber(), dto.getPassword());
+        // 获取 userId
         int userId = user.getId();
         // 调用 Sa-Token 实现登录鉴权
         StpUtil.login(userId);

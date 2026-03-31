@@ -74,7 +74,7 @@ public class LogAspect
 
         // 获取操作用户(使用 Sa-Token 的方法)
         Object loginId = StpUtil.getLoginIdDefaultNull();
-        logEntity.setUserNumber(loginId != null ? loginId.toString() : "anonymous");
+        logEntity.setUserNumber(loginId != null ? loginId.toString() : "-");
 
         Object businessResult; // 业务方法返回结果
         try

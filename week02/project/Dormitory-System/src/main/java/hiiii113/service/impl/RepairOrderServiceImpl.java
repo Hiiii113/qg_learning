@@ -91,10 +91,22 @@ public class RepairOrderServiceImpl extends ServiceImpl<RepairOrderMapper, Repai
         String originalName = file.getOriginalFilename(); // 原先的图片名
         // 获取后缀
         String ext = null;
-        if (originalName != null)
+        if (originalName != null && originalName.contains("."))
         {
-            ext = originalName.substring(originalName.lastIndexOf("."));
+            ext = originalName.substring(originalName.lastIndexOf(".")).toLowerCase();
         }
+        else
+        {
+            throw new ServiceException("文件名不合法！", ServiceException.CODE_BAD_REQUEST);
+        }
+
+        // 检验图片格式(利用正则表达式)
+        if (!ext.matches("\\.(jpg|jpeg|png|gif|webp|bmp)$"))
+        {
+            throw new ServiceException("只支持 jpg/jpeg/png/gif/webp/bmp 格式的图片！",
+                    ServiceException.CODE_BAD_REQUEST);
+        }
+
         // 生成最终的文件名
         String fileName = System.currentTimeMillis() + ext;
 
@@ -129,9 +141,15 @@ public class RepairOrderServiceImpl extends ServiceImpl<RepairOrderMapper, Repai
             throw new ServiceException("报修单不存在！", ServiceException.CODE_BAD_REQUEST);
         }
         // 看订单是否已完成
-        if (ro.getStatus() != 4)
+        if (ro.getStatus() != 3)
         {
             throw new ServiceException("报修单未完成，不能评价！", ServiceException.CODE_BAD_REQUEST);
+        }
+
+        // 看看订单的评分是否已存在
+        if (ro.getRating() != null)
+        {
+            throw new ServiceException("报修单已评价！", ServiceException.CODE_BAD_REQUEST);
         }
 
         RepairOrder repairOrder = new RepairOrder();
