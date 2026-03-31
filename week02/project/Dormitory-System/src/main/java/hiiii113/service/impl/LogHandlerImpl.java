@@ -22,7 +22,7 @@ public class LogHandlerImpl implements LogHandler
     @Override
     public void saveOperationLog(Log log) throws JsonProcessingException
     {
-        // 关键：将Object类型的params/result序列化为JSON字符串（适配数据库text类型）
+        // 将Object类型的params/result序列化为JSON字符串
         if (log.getParams() != null)
         {
             log.setParams(objectMapper.writeValueAsString(log.getParams()));

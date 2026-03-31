@@ -76,7 +76,7 @@ public class LogAspect
         Object loginId = StpUtil.getLoginIdDefaultNull();
         logEntity.setUserNumber(loginId != null ? loginId.toString() : "anonymous");
 
-        Object businessResult = null; // 业务方法返回结果
+        Object businessResult; // 业务方法返回结果
         try
         {
             // 执行目标业务方法（核心业务逻辑）

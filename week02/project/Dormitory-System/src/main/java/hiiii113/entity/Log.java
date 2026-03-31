@@ -14,7 +14,7 @@ public class Log
 {
     // 日志 id
     @TableId(type = IdType.AUTO)
-    private int id;
+    private Integer id;
 
     // 操作用户
     private String userNumber;

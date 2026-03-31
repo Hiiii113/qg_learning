@@ -21,7 +21,7 @@ public class GlobalExceptionHandler
     public Result<Void> handleServiceException(ServiceException e)
     {
         log.error("业务异常: ", e);
-        return Result.error(e.getMsg(), e.getCode());
+        return Result.fail(e.getMsg(), e.getCode());
     }
 
     // 未登录异常，返回前端
@@ -29,7 +29,7 @@ public class GlobalExceptionHandler
     public Result<Void> handleNotLoginException(NotLoginException e)
     {
         log.error("未登录异常: ", e);
-        return Result.error("请登录再访问！", 401);
+        return Result.fail("请登录再访问！", Result.CODE_UNAUTHORIZED);
     }
 
     // 无权限异常，返回前端
@@ -37,7 +37,7 @@ public class GlobalExceptionHandler
     public Result<Void> handleNotPermissionException(NotPermissionException e)
     {
         log.error("无权限异常: ", e);
-        return Result.error("该账号无权限！", 401);
+        return Result.fail("该账号无权限！", Result.CODE_FORBIDDEN);
     }
 
     // 数据库异常，返回前端
@@ -45,7 +45,7 @@ public class GlobalExceptionHandler
     public Result<Void> handleSQLException(SQLException e)
     {
         log.error("数据库异常: ", e);
-        return Result.error("数据库错误！", 500);
+        return Result.fail("数据库错误！");
     }
 
     // 未知异常，返回前端
@@ -53,6 +53,6 @@ public class GlobalExceptionHandler
     public Result<Void> handleException(Exception e)
     {
         log.error("未知异常: ", e);
-        return Result.error("服务器内部错误！", 500);
+        return Result.fail("服务器内部错误！");
     }
 }

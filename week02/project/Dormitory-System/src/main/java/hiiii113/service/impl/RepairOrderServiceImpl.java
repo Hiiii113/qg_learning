@@ -41,14 +41,14 @@ public class RepairOrderServiceImpl extends ServiceImpl<RepairOrderMapper, Repai
         // 判空
         if (userId == null || problem == null)
         {
-            throw new ServiceException("用户id和问题描述不能为空！", 400);
+            throw new ServiceException("用户id和问题描述不能为空！", ServiceException.CODE_BAD_REQUEST);
         }
 
         // 查找到这个用户信息并填入
         User user = userMapper.selectById(userId);
         if (user == null)
         {
-            throw new ServiceException("该用户不存在！", 400);
+            throw new ServiceException("该用户不存在！", ServiceException.CODE_BAD_REQUEST);
         }
         String userNumber = user.getUserNumber();
         String dormRoom = user.getDormRoom();
@@ -63,7 +63,7 @@ public class RepairOrderServiceImpl extends ServiceImpl<RepairOrderMapper, Repai
 
         if (!res)
         {
-            throw new ServiceException("提交失败！", 500);
+            throw new ServiceException("提交失败！", ServiceException.CODE_ERROR);
         }
 
         // 获取id并返回(MP的save会自动把自增的id回填到实体类)
@@ -77,14 +77,14 @@ public class RepairOrderServiceImpl extends ServiceImpl<RepairOrderMapper, Repai
         // 判空
         if (repairOrderId == null || file.isEmpty())
         {
-            throw new ServiceException("报修单id和图片不能为空！", 400);
+            throw new ServiceException("报修单id和图片不能为空！", ServiceException.CODE_BAD_REQUEST);
         }
 
         // 看是否存在这个报修单
         RepairOrder ro = repairOrderMapper.selectById(repairOrderId);
         if (ro == null)
         {
-            throw new ServiceException("报修单不存在！", 400);
+            throw new ServiceException("报修单不存在！", ServiceException.CODE_BAD_REQUEST);
         }
 
         // 生成文件名，防止重复
@@ -111,7 +111,7 @@ public class RepairOrderServiceImpl extends ServiceImpl<RepairOrderMapper, Repai
 
         if (!res)
         {
-            throw new ServiceException("提交失败！", 500);
+            throw new ServiceException("提交失败！", ServiceException.CODE_ERROR);
         }
 
         return imageUrl;
@@ -126,12 +126,12 @@ public class RepairOrderServiceImpl extends ServiceImpl<RepairOrderMapper, Repai
         // 看订单是否存在
         if (ro == null)
         {
-            throw new ServiceException("报修单不存在！", 400);
+            throw new ServiceException("报修单不存在！", ServiceException.CODE_BAD_REQUEST);
         }
         // 看订单是否已完成
         if (ro.getStatus() != 4)
         {
-            throw new ServiceException("报修单未完成，不能评价！", 400);
+            throw new ServiceException("报修单未完成，不能评价！", ServiceException.CODE_BAD_REQUEST);
         }
 
         RepairOrder repairOrder = new RepairOrder();
@@ -141,7 +141,7 @@ public class RepairOrderServiceImpl extends ServiceImpl<RepairOrderMapper, Repai
 
         if (!res)
         {
-            throw new ServiceException("报修单不存在！", 500);
+            throw new ServiceException("报修单不存在！", ServiceException.CODE_ERROR);
         }
     }
 
@@ -152,7 +152,7 @@ public class RepairOrderServiceImpl extends ServiceImpl<RepairOrderMapper, Repai
         // 判空
         if (userId == null)
         {
-            throw new ServiceException("用户id不能为空！", 400);
+            throw new ServiceException("用户id不能为空！", ServiceException.CODE_BAD_REQUEST);
         }
 
         return lambdaQuery()
@@ -167,7 +167,7 @@ public class RepairOrderServiceImpl extends ServiceImpl<RepairOrderMapper, Repai
     {
         if (userId == null)
         {
-            throw new ServiceException("用户id不能为空！", 400);
+            throw new ServiceException("用户id不能为空！", ServiceException.CODE_BAD_REQUEST);
         }
 
         Page<RepairOrder> page = new Page<>(currentPage, size);
@@ -223,13 +223,13 @@ public class RepairOrderServiceImpl extends ServiceImpl<RepairOrderMapper, Repai
         // 判空
         if (repairOrderId == null || problem == null)
         {
-            throw new ServiceException("报修单id和问题描述不能为空！", 400);
+            throw new ServiceException("报修单id和问题描述不能为空！", ServiceException.CODE_BAD_REQUEST);
         }
 
         RepairOrder ro = repairOrderMapper.selectById(repairOrderId);
         if (ro == null)
         {
-            throw new ServiceException("报修单不存在！", 400);
+            throw new ServiceException("报修单不存在！", ServiceException.CODE_BAD_REQUEST);
         }
 
         RepairOrder repairOrder = new RepairOrder();
@@ -239,7 +239,7 @@ public class RepairOrderServiceImpl extends ServiceImpl<RepairOrderMapper, Repai
 
         if (!res)
         {
-            throw new ServiceException("报修单不存在！", 500);
+            throw new ServiceException("报修单不存在！", ServiceException.CODE_ERROR);
         }
     }
 
@@ -250,13 +250,13 @@ public class RepairOrderServiceImpl extends ServiceImpl<RepairOrderMapper, Repai
         // 判空
         if (repairOrderId == null || status == null || staffNumber == null)
         {
-            throw new ServiceException("报修单id和状态和员工id不能为空！", 400);
+            throw new ServiceException("报修单id和状态和员工id不能为空！", ServiceException.CODE_BAD_REQUEST);
         }
 
         RepairOrder ro = repairOrderMapper.selectById(repairOrderId);
         if (ro == null)
         {
-            throw new ServiceException("报修单不存在！", 400);
+            throw new ServiceException("报修单不存在！", ServiceException.CODE_BAD_REQUEST);
         }
 
         boolean res = update(new LambdaUpdateWrapper<RepairOrder>()
@@ -266,7 +266,7 @@ public class RepairOrderServiceImpl extends ServiceImpl<RepairOrderMapper, Repai
 
         if (!res)
         {
-            throw new ServiceException("报修单不存在！", 500);
+            throw new ServiceException("报修单不存在！", ServiceException.CODE_ERROR);
         }
     }
 
@@ -277,13 +277,13 @@ public class RepairOrderServiceImpl extends ServiceImpl<RepairOrderMapper, Repai
         // 判空
         if (repairOrderId == null || status == null || staffNumber == null)
         {
-            throw new ServiceException("报修单id和状态和员工id不能为空！", 400);
+            throw new ServiceException("报修单id和状态和员工id不能为空！", ServiceException.CODE_BAD_REQUEST);
         }
 
         RepairOrder ro = repairOrderMapper.selectById(repairOrderId);
         if (ro == null)
         {
-            throw new ServiceException("报修单不存在！", 400);
+            throw new ServiceException("报修单不存在！", ServiceException.CODE_BAD_REQUEST);
         }
 
         LambdaUpdateWrapper<RepairOrder> wrapper = new LambdaUpdateWrapper<>();
@@ -301,7 +301,7 @@ public class RepairOrderServiceImpl extends ServiceImpl<RepairOrderMapper, Repai
 
         if (!res)
         {
-            throw new ServiceException("报修单不存在！", 500);
+            throw new ServiceException("报修单不存在！", ServiceException.CODE_ERROR);
         }
     }
 
@@ -312,20 +312,20 @@ public class RepairOrderServiceImpl extends ServiceImpl<RepairOrderMapper, Repai
         // 判空
         if (repairOrderId == null)
         {
-            throw new ServiceException("报修单id不能为空！", 400);
+            throw new ServiceException("报修单id不能为空！", ServiceException.CODE_BAD_REQUEST);
         }
 
         RepairOrder ro = repairOrderMapper.selectById(repairOrderId);
         if (ro == null)
         {
-            throw new ServiceException("报修单不存在！", 400);
+            throw new ServiceException("报修单不存在！", ServiceException.CODE_BAD_REQUEST);
         }
 
         boolean res = removeById(repairOrderId);
 
         if (!res)
         {
-            throw new ServiceException("报修单不存在！", 500);
+            throw new ServiceException("报修单不存在！", ServiceException.CODE_ERROR);
         }
     }
 
@@ -336,13 +336,13 @@ public class RepairOrderServiceImpl extends ServiceImpl<RepairOrderMapper, Repai
         // 判空
         if (repairOrderId == null)
         {
-            throw new ServiceException("报修单id不能为空！", 400);
+            throw new ServiceException("报修单id不能为空！", ServiceException.CODE_BAD_REQUEST);
         }
 
         RepairOrder ro = repairOrderMapper.selectById(repairOrderId);
         if (ro == null)
         {
-            throw new ServiceException("报修单不存在！", 400);
+            throw new ServiceException("报修单不存在！", ServiceException.CODE_BAD_REQUEST);
         }
 
         boolean res = update(new LambdaUpdateWrapper<RepairOrder>()
@@ -351,7 +351,7 @@ public class RepairOrderServiceImpl extends ServiceImpl<RepairOrderMapper, Repai
 
         if (!res)
         {
-            throw new ServiceException("报修单不存在！", 500);
+            throw new ServiceException("报修单不存在！", ServiceException.CODE_ERROR);
         }
     }
 }

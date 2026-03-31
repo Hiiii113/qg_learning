@@ -326,8 +326,8 @@ const detailImageFile = ref(null) // 详情里面的图片
 const detailImagePreview = ref('') // 详情里面的预览图片
 const detailFileRef = ref(null) // 详情里面的上传图片的 DOM 元素
 
-const imageVisible = ref(false) //
-const imageSrc = ref('') //
+const imageVisible = ref(false) // 图片预览是否可见
+const imageSrc = ref('') // 预览的图片
 
 // 映射
 const statusMap = { 1: '待处理', 2: '处理中', 3: '已完成', 4: '已取消' }
@@ -344,6 +344,7 @@ const showMessage = (text, type = 'success') => {
 
 // 获取照片地址
 const getImageUrl = (url) =>
+    // 是 http 开头就原样访问，不是就去除开头的一个或多个 '/' ，然后拼接并访问
     url?.startsWith('http') ? url : `http://localhost:8081/${url?.replace(/^\/+/, '')}`
 
 // 绑定宿舍
@@ -582,7 +583,7 @@ const updatePassword = () => {
             showMessage('修改成功')
             newPassword.value = ''
         })
-        .catch(() => showMessage('修改失败', 'error'))
+        .catch((err) => showMessage('修改失败！' + err.msg, 'error'))
         .finally(() => {
             submitting.value = false // 结束提交
         })

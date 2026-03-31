@@ -1,20 +1,17 @@
 package hiiii113.service.impl;
 
 import cn.dev33.satoken.stp.StpInterface;
+import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Component
+@RequiredArgsConstructor
 public class StpInterfaceImpl implements StpInterface
 {
     private final JdbcTemplate jdbcTemplate; // 直接用 JdbcTemplate 查数据库最快
-
-    StpInterfaceImpl(JdbcTemplate jdbcTemplate)
-    {
-        this.jdbcTemplate = jdbcTemplate;
-    }
 
     // 返回一个账号所拥有的权限码集合
     @Override

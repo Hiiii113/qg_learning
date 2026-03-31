@@ -31,6 +31,6 @@ public class LogController
                                       @RequestParam(defaultValue = "10") Integer size)
     {
         IPage<Log> res = logService.getLogs(page, size);
-        return Result.success("查询成功！", res, 200);
+        return Result.ok("查询成功！", res);
     }
 }

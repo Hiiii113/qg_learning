@@ -39,7 +39,7 @@ public class UserController
         // 获取 Token
         String token = StpUtil.getTokenValue();
         // 返回信息和 Token
-        return Result.success("登录成功！", token, 200);
+        return Result.ok("登录成功！", token);
     }
 
     // 注册
@@ -48,7 +48,7 @@ public class UserController
     public Result<Void> register(@RequestBody UserRegisterDto dto)
     {
         userService.register(dto.getUserNumber(), dto.getPassword(), dto.getRole());
-        return Result.success("注册成功！", 201);
+        return Result.created("注册成功！");
     }
 
     // 退出登录
@@ -59,7 +59,7 @@ public class UserController
         // 清除 Token
         StpUtil.logout();
         // 返回退出登录成功
-        return Result.success("退出登录成功！", 200);
+        return Result.ok("退出登录成功！");
     }
 
     // 绑定宿舍
@@ -71,7 +71,7 @@ public class UserController
         // 从 Token 获取用户 id
         int userId = StpUtil.getLoginIdAsInt();
         userService.bindDormitory(userId, dto.getDormRoom());
-        return Result.success("绑定成功！", 200);
+        return Result.ok("绑定成功！");
     }
 
     // 修改密码
@@ -83,7 +83,7 @@ public class UserController
         // 从 Token 获取用户 id
         int userId = StpUtil.getLoginIdAsInt();
         userService.modifyPassword(userId, dto.getPassword());
-        return Result.success("修改成功！", 200);
+        return Result.ok("修改成功！");
     }
 
     // 获取用户信息
@@ -95,6 +95,6 @@ public class UserController
         // 从 Token 获取用户工号
         int userId = StpUtil.getLoginIdAsInt();
         User user = userService.getUserInfo(userId);
-        return Result.success("查询成功！", user, 200);
+        return Result.ok("查询成功！", user);
     }
 }

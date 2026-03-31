@@ -1,6 +1,5 @@
 package hiiii113.controller;
 
-import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -35,7 +34,7 @@ public class RepairOrderController
         // 从 Token 获取 userId
         int userId = StpUtil.getLoginIdAsInt();
         Integer repairOrderId = repairOrderService.createRepairOrder(userId, dto.getProblem());
-        return Result.success("提交成功！", repairOrderId, 201);
+        return Result.created("提交成功！", repairOrderId);
     }
 
     // 提交报修单图片
@@ -48,7 +47,7 @@ public class RepairOrderController
         String imageUrl = repairOrderService.uploadImage(file, repairOrderId);
 
         // 返回访问路径
-        return Result.success("提交成功！", imageUrl, 200);
+        return Result.ok("提交成功！", imageUrl);
     }
 
     // 用户评价
@@ -57,7 +56,7 @@ public class RepairOrderController
     public Result<Void> rating(@PathVariable int repairOrderId, @RequestBody UserRatingDto dto)
     {
         repairOrderService.userRating(repairOrderId, dto.getRating());
-        return Result.success("评价成功！", 200);
+        return Result.ok("评价成功！");
     }
 
     // 查看单个用户报修单（分页）
@@ -70,7 +69,7 @@ public class RepairOrderController
         // 从 Token 获取 userId
         int userId = StpUtil.getLoginIdAsInt();
         IPage<RepairOrder> res = repairOrderService.getUserRepairOrderByPage(userId, page, size);
-        return Result.success("查询成功！", res, 200);
+        return Result.ok("查询成功！", res);
     }
 
     // 查看报修单列表
@@ -81,7 +80,7 @@ public class RepairOrderController
                                                       @RequestParam(defaultValue = "10") Integer size, // 默认一页10条
                                                       @RequestParam(required = false) Integer status)
     {
-        IPage<RepairOrder> res = null;
+        IPage<RepairOrder> res;
         // 根据 status 是否存在判断是否需要根据状态获取 repair-orders
         if (status != null)
         {
@@ -91,7 +90,7 @@ public class RepairOrderController
         {
             res = repairOrderService.getAllRepairOrder(page, size);
         }
-        return Result.success("查询成功！", res, 200);
+        return Result.ok("查询成功！", res);
     }
 
     // 查看单个报修单
@@ -100,7 +99,7 @@ public class RepairOrderController
     public Result<RepairOrder> getRepairOrderInfo(@PathVariable int repairOrderId)
     {
         RepairOrder res = repairOrderService.getRepairOrderInfo(repairOrderId);
-        return Result.success("查询成功！", res, 200);
+        return Result.ok("查询成功！", res);
     }
 
     // 修改单个报修单
@@ -111,7 +110,7 @@ public class RepairOrderController
     {
         repairOrderService.modifyRepairOrder(repairOrderId, dto.getProblem());
 
-        return Result.success("更新成功！", 200);
+        return Result.ok("更新成功！");
     }
 
     // 更新单个报修单状态
@@ -122,7 +121,7 @@ public class RepairOrderController
     {
         repairOrderService.updateRepairOrder(repairOrderId, dto.getStatus(), dto.getStaffNumber(), dto.getProblem());
 
-        return Result.success("修改成功！", 200);
+        return Result.ok("修改成功！");
     }
 
     // 删除报修单
@@ -133,7 +132,7 @@ public class RepairOrderController
     {
         repairOrderService.deleteRepairOrder(repairOrderId);
 
-        return Result.success("删除成功！", 200);
+        return Result.ok("删除成功！");
     }
 
     // 取消报修单
@@ -142,6 +141,6 @@ public class RepairOrderController
     public Result<Void> cancelRepairOrder(@PathVariable int repairOrderId)
     {
         repairOrderService.cancelRepairOrder(repairOrderId);
-        return Result.success("取消成功！", 200);
+        return Result.ok("取消成功！");
     }
 }

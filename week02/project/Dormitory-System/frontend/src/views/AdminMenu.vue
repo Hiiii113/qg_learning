@@ -31,10 +31,7 @@
                     </button>
                     <select
                         v-model="filterStatus"
-                        @change="
-                            currentPage = 1
-                            loadRepairs()
-                        "
+                        @change="((currentPage = 1), loadRepairs())"
                         class="filter-select"
                     >
                         <option :value="0">全部状态</option>
@@ -166,10 +163,7 @@
                 <div class="pagination">
                     <button
                         class="btn-page"
-                        @click="
-                            logsPage--
-                            loadLogs()
-                        "
+                        @click="(logsPage--, loadLogs())"
                         :disabled="logsPage <= 1"
                     >
                         上一页
@@ -177,10 +171,7 @@
                     <span class="page-info">第 {{ logsPage }} / {{ logsPages }} 页</span>
                     <button
                         class="btn-page"
-                        @click="
-                            logsPage++
-                            loadLogs()
-                        "
+                        @click="(logsPage++, loadLogs())"
                         :disabled="logsPage >= logsPages"
                     >
                         下一页
@@ -491,7 +482,7 @@ const updatePassword = () => {
             showMessage('修改成功')
             newPassword.value = ''
         })
-        .catch(() => showMessage('修改失败', 'error'))
+        .catch((err) => showMessage('修改失败！' + err.msg, 'error'))
         .finally(() => {
             submitting.value = false
         })
