@@ -209,6 +209,12 @@
                                 <span class="label">创建时间</span
                                 ><span class="value">{{ detailData.createTime }}</span>
                             </div>
+                            <div class="info-item">
+                                <span class="label">评分</span>
+                                <span class="value">{{
+                                    detailData.rating ? detailData.rating + ' 星' : '未评价'
+                                }}</span>
+                            </div>
                         </div>
 
                         <div class="form-item">
