@@ -74,7 +74,9 @@ VALUES (1, '查看个人报修单', 'order:listMe'),
        (4, '修改报修单', 'order:modify'),
        (5, '更新报修单', 'order:update'),
        (6, '删除报修单', 'order:delete'),
-       (7, '获取系统日志', 'log:list');
+       (7, '评价报修单', 'order:rating'),
+       (8, '上传图片', 'order:upload'),
+       (9, '获取系统日志', 'log:list');
 
 -- 关联角色与权限 (管理员)
 INSERT INTO sys_role_permission (role_id, permission_id)
@@ -84,14 +86,18 @@ VALUES (2, 1),
        (2, 4),
        (2, 5),
        (2, 6),
-       (2, 7);
+       (2, 7),
+       (2, 8),
+       (2, 9);
 -- 管理员(2)拥有所有权限
 
 -- 关联角色与权限(普通用户)
 INSERT INTO sys_role_permission (role_id, permission_id)
 VALUES (1, 1),
        (1, 3),
-       (1, 4);
+       (1, 4),
+       (1, 7),
+       (1, 8);
 
 -- 日志表
 CREATE TABLE `sys_operation_log`

@@ -42,6 +42,7 @@ public class RepairOrderController
     // 提交报修单图片
     @LogAnnotation(module = "repair-orders", operator = "提交报修单图片")
     @PostMapping("/upload")
+    @SaCheckPermission("order:upload")
     public Result<String> uploadImage(@RequestParam("file") MultipartFile file,
                                       @RequestParam("id") Integer repairOrderId) throws IOException
     {
@@ -55,6 +56,7 @@ public class RepairOrderController
     // 用户评价
     @LogAnnotation(module = "repair-orders", operator = "用户评价")
     @PostMapping("/{repairOrderId}/rating")
+    @SaCheckPermission("order:rating")
     public Result<Void> rating(@PathVariable int repairOrderId, @RequestBody UserRatingDto dto)
     {
         repairOrderService.userRating(repairOrderId, dto.getRating());

@@ -176,24 +176,24 @@ public class LogAspect
         // 方法全路径：包名 + 类名 + 方法名
         logEntity.setMethod(method.getDeclaringClass().getName() + "." + method.getName());
         // 方法参数：数组转字符串
-        logEntity.setParams(Arrays.toString(joinPoint.getArgs()));
+        logEntity.setParams(joinPoint.getArgs());
 
-        // 获取@OperationLog注解信息
+        // 获取 @LogAnnotation 注解信息
         LogAnnotation logAnnotation = method.getAnnotation(LogAnnotation.class);
         logEntity.setModule(logAnnotation.module());
         logEntity.setOperator(logAnnotation.operator());
 
         // 获取操作用户(使用 Sa-Token 的方法)
         Object loginId = StpUtil.getLoginIdDefaultNull();
-        logEntity.setUserNumber(loginId != null ? loginId.toString() : "anonymous");
+        logEntity.setUserNumber(loginId != null ? loginId.toString() : "-");
 
-        Object businessResult = null; // 业务方法返回结果
+        Object businessResult; // 业务方法返回结果
         try
         {
             // 执行目标业务方法（核心业务逻辑）
             businessResult = joinPoint.proceed();
             // 方法执行成功：标记结果
-            logEntity.setResult(objectMapper.writeValueAsString(businessResult));
+            logEntity.setResult(businessResult);
         }
         catch (Exception e)
         {

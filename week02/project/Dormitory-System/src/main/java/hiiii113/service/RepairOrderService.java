@@ -41,9 +41,6 @@ public interface RepairOrderService extends IService<RepairOrder>
     void modifyRepairOrder(Integer repairOrderId, String problem);
 
     // 更新报修单
-    void updateRepairOrder(Integer repairOrderId, Integer status, Integer staffId);
-
-    // 更新报修单（支持同时更新状态、员工和问题）
     void updateRepairOrder(Integer repairOrderId, Integer status, Integer staffNumber, String problem);
 
     // 删除报修单

@@ -97,7 +97,7 @@
                             <th>问题</th>
                             <th>图片</th>
                             <th>状态</th>
-                            <th>处理人</th>
+                            <th>处理人工号</th>
                             <th>创建时间</th>
                             <th>操作</th>
                         </tr>
@@ -120,7 +120,7 @@
                                     statusText(item.status)
                                 }}</span>
                             </td>
-                            <td>{{ item.status === 3 ? item.staffId : '-' }}</td>
+                            <td>{{ item.status === 3 ? item.staffNumber : '-' }}</td>
                             <td>{{ item.createTime }}</td>
                             <td>
                                 <button class="btn-action" @click.stop="openDetail(item.id)">
@@ -197,7 +197,7 @@
                             </div>
                             <div class="info-item" v-if="detailData.status === 3">
                                 <span class="label">处理人</span
-                                ><span class="value">{{ detailData.staffId }}</span>
+                                ><span class="value">{{ detailData.staffNumber }}</span>
                             </div>
                             <div class="info-item" v-if="detailData.status === 3">
                                 <span class="label">完成时间</span

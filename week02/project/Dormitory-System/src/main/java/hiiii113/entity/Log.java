@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -33,9 +34,11 @@ public class Log
     private String method;
 
     // 方法参数(JSON格式)
+    @JsonIgnore
     private Object params;
 
     // 操作结果
+    @JsonIgnore
     private Object result;
 
     // 异常信息(失败时记录)

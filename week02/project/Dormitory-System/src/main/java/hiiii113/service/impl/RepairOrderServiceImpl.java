@@ -112,6 +112,7 @@ public class RepairOrderServiceImpl extends ServiceImpl<RepairOrderMapper, Repai
 
         // 保存到本地目录
         String path = System.getProperty("user.dir") + "/upload/"; // 项目根目录下的 /upload
+        new File(path).mkdirs(); // 创建 /upload 目录
         file.transferTo(new File(path + fileName));
         String imageUrl = "upload/" + fileName;
 
@@ -262,33 +263,6 @@ public class RepairOrderServiceImpl extends ServiceImpl<RepairOrderMapper, Repai
     }
 
     // 更新报修单
-    @Override
-    public void updateRepairOrder(Integer repairOrderId, Integer status, Integer staffNumber)
-    {
-        // 判空
-        if (repairOrderId == null || status == null || staffNumber == null)
-        {
-            throw new ServiceException("报修单id和状态和员工id不能为空！", ServiceException.CODE_BAD_REQUEST);
-        }
-
-        RepairOrder ro = repairOrderMapper.selectById(repairOrderId);
-        if (ro == null)
-        {
-            throw new ServiceException("报修单不存在！", ServiceException.CODE_BAD_REQUEST);
-        }
-
-        boolean res = update(new LambdaUpdateWrapper<RepairOrder>()
-                .eq(RepairOrder::getId, repairOrderId)
-                .set(RepairOrder::getStatus, status)
-                .set(RepairOrder::getStaffNumber, staffNumber));
-
-        if (!res)
-        {
-            throw new ServiceException("报修单不存在！", ServiceException.CODE_ERROR);
-        }
-    }
-
-    // 更新报修单（支持同时更新状态、员工和问题）
     @Override
     public void updateRepairOrder(Integer repairOrderId, Integer status, Integer staffNumber, String problem)
     {

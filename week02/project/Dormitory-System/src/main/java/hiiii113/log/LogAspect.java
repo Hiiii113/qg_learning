@@ -18,7 +18,6 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 
 /**
  * 日志记录 aop
@@ -29,8 +28,6 @@ import java.util.Arrays;
 @RequiredArgsConstructor // 使用lombok自动注入所需的
 public class LogAspect
 {
-    // Jackson
-    private final ObjectMapper objectMapper;
     // LogHandler
     private final LogHandler logHandler;
 
@@ -65,9 +62,9 @@ public class LogAspect
         // 方法全路径：包名 + 类名 + 方法名
         logEntity.setMethod(method.getDeclaringClass().getName() + "." + method.getName());
         // 方法参数：数组转字符串
-        logEntity.setParams(Arrays.toString(joinPoint.getArgs()));
+        logEntity.setParams(joinPoint.getArgs());
 
-        // 获取@OperationLog注解信息
+        // 获取 @LogAnnotation 注解信息
         LogAnnotation logAnnotation = method.getAnnotation(LogAnnotation.class);
         logEntity.setModule(logAnnotation.module());
         logEntity.setOperator(logAnnotation.operator());
@@ -82,7 +79,7 @@ public class LogAspect
             // 执行目标业务方法（核心业务逻辑）
             businessResult = joinPoint.proceed();
             // 方法执行成功：标记结果
-            logEntity.setResult(objectMapper.writeValueAsString(businessResult));
+            logEntity.setResult(businessResult);
         }
         catch (Exception e)
         {

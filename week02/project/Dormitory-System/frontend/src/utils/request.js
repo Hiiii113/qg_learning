@@ -27,8 +27,8 @@ instance.interceptors.response.use(
             return response.data
         } else if (code === 401) {
             localStorage.removeItem('token')
-            alert('登录已过期，请重新登录')
             router.push('/login')
+            alert('登录已过期，请重新登录')
         } else {
             console.error(msg)
             return Promise.reject(response.data)

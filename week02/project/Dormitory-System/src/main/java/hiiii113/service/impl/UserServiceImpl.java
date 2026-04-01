@@ -176,7 +176,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 获取用户角色
         UserRole userRole = userRoleMapper.selectOne(new LambdaQueryWrapper<UserRole>().eq(UserRole::getUserId, userId));
         // 设置 role
-        user.setRole(userRole.getRoleId());
+        if (userRole == null)
+        {
+            user.setRole(1); // 默认给普通用户权限
+        }
+        else
+        {
+            user.setRole(userRole.getRoleId());
+        }
         return user;
     }
 }
